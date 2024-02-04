@@ -1,0 +1,11 @@
+import (
+	"os"
+	"dependor/lib/tokenizer"
+	"dependor/lib/config"
+)
+
+// walks file tree starting from current directory and creates an import graph
+func walk() map[string]string {
+	// TODO
+	return make(map[string]string, 0)
+}
