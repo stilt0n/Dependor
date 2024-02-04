@@ -11,8 +11,8 @@ import (
 const config_file_name = "dependor.json"
 
 type Config struct {
-	// These patterns should work with go's `filepath.Match` function.
-	// I may add https://github.com/gobwas/glob or something similar for globs later
+	// These patterns should work with go's `filepath.Match` function, which means no recursive directory mathing.
+	// This is a pretty big limitation so I may want to add a glob library like https://github.com/gobwas/glob.
 	IgnorePatterns []string `json:"ignorePatterns"`
 }
 
