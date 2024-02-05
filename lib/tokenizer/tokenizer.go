@@ -17,10 +17,9 @@ const (
 )
 
 type Tokenizer struct {
-	// We want a nextIndex pointer so we can read comments
-	currentIndex, nextIndex int
-	fileRunes               []rune
-	imports                 []string
+	currentIndex int
+	fileRunes    []rune
+	imports      []string
 }
 
 func NewTokenizerFromFile(filepath string) (*Tokenizer, error) {
@@ -35,7 +34,6 @@ func NewTokenizerFromFile(filepath string) (*Tokenizer, error) {
 func New(fileString string) *Tokenizer {
 	t := Tokenizer{
 		currentIndex: 0,
-		nextIndex:    1,
 		fileRunes:    []rune(fileString),
 		imports:      []string{},
 	}
@@ -163,7 +161,7 @@ func (t *Tokenizer) skipSingleLineComment() {
 }
 
 func (t *Tokenizer) skipMultiLineComment() {
-	for t.nextIndex < t.end() && !(t.current() == '*' && t.peek() == '/') {
+	for t.currentIndex+1 < t.end() && !(t.current() == '*' && t.peek() == '/') {
 		t.advanceChars()
 	}
 	t.advanceChars(2)
@@ -186,10 +184,10 @@ func (t *Tokenizer) skipImportComments() {
 
 func (t *Tokenizer) peek() rune {
 	// TODO: Refactor this to be less sloppy
-	if t.nextIndex >= t.end() {
+	if t.currentIndex+1 >= t.end() {
 		return 0
 	}
-	return t.fileRunes[t.nextIndex]
+	return t.fileRunes[t.currentIndex+1]
 }
 
 func (t *Tokenizer) current() rune {
@@ -231,7 +229,6 @@ func (t *Tokenizer) advanceChars(args ...int) {
 		step = args[0]
 	}
 	t.currentIndex += step
-	t.nextIndex += step
 }
 
 func isQuote(c rune) bool {
