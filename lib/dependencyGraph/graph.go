@@ -44,7 +44,7 @@ func New() *DependencyGraph {
 }
 
 // walks file tree starting from current directory and creates an import graph
-func (graph *DependencyGraph) Walk() map[string][]string {
+func (graph *DependencyGraph) Walk() (map[string][]string, error) {
 	// TODO: make this configurable
 	searchableExtensions := regexp.MustCompile("(.js|.jsx|.ts|.tsx)$")
 	var wg sync.WaitGroup
@@ -72,9 +72,10 @@ func (graph *DependencyGraph) Walk() map[string][]string {
 
 	if err != nil {
 		fmt.Printf("Encountered errors while walking file tree: %v\n", err)
+		return make(map[string][]string, 0), err
 	}
 
-	return graph.edgeList.Edges()
+	return graph.edgeList.Edges(), nil
 }
 
 // I need to look into if sharing resources on a struct is a problem. In that
