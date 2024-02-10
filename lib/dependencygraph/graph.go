@@ -26,10 +26,29 @@ func (list *EdgeList) Edges() map[string][]string {
 	return list.edges
 }
 
+func newEdgeList() *EdgeList {
+	return &EdgeList{
+		edges: make(map[string][]string),
+	}
+}
+
 type DependencyGraph struct {
 	edgeList *EdgeList
 	config   *config.Config
 	rootPath string
+}
+
+func New() *DependencyGraph {
+	cfg, err := config.ReadConfig()
+	if err != nil {
+		// TODO: determine how best to handle / ignore errors
+		fmt.Printf("Recieved error but error might be due to using default config settings. See error: %s\n", err)
+	}
+	return &DependencyGraph{
+		config:   cfg,
+		rootPath: ".",
+		edgeList: newEdgeList(),
+	}
 }
 
 func NewWithRootPath(rootPath string) *DependencyGraph {
@@ -45,41 +64,7 @@ func NewWithRootPath(rootPath string) *DependencyGraph {
 	return &DependencyGraph{
 		config:   cfg,
 		rootPath: rootPath,
-	}
-}
-
-func New() *DependencyGraph {
-	cfg, err := config.ReadConfig()
-	if err != nil {
-		// TODO: determine how best to handle / ignore errors
-		fmt.Printf("Recieved error but error might be due to using default config settings. See error: %s\n", err)
-	}
-	return &DependencyGraph{
-		config:   cfg,
-		rootPath: ".",
-	}
-}
-
-func (graph *DependencyGraph) PrintPaths() {
-	searchableExtensions := regexp.MustCompile(`(\.js|\.jsx|\.ts|\.tsx)$`)
-	err := filepath.WalkDir(".", func(path string, info fs.DirEntry, err error) error {
-		if err != nil {
-			fmt.Printf("There was an error accessing path %q: %v\n", path, err)
-			return err
-		}
-
-		if info.IsDir() && graph.config.ShouldIgnore(path) {
-			fmt.Printf("Ran into an ignore directory: %q\n", info.Name())
-			return filepath.SkipDir
-		}
-
-		if searchableExtensions.MatchString(info.Name()) {
-			fmt.Printf("Found %q at path %s\n", info.Name(), path)
-		}
-		return nil
-	})
-	if err != nil {
-		fmt.Printf("Got error: %s", err)
+		edgeList: newEdgeList(),
 	}
 }
 
@@ -89,7 +74,7 @@ func (graph *DependencyGraph) Walk() (map[string][]string, error) {
 	searchableExtensions := regexp.MustCompile(`(\.js|\.jsx|\.ts|\.tsx)$`)
 	var wg sync.WaitGroup
 
-	err := filepath.WalkDir(".", func(path string, info fs.DirEntry, err error) error {
+	err := filepath.WalkDir(graph.rootPath, func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			fmt.Printf("There was an error accessing path %q: %v\n", path, err)
 			return err
@@ -112,10 +97,61 @@ func (graph *DependencyGraph) Walk() (map[string][]string, error) {
 
 	if err != nil {
 		fmt.Printf("Encountered errors while walking file tree: %v\n", err)
-		return make(map[string][]string, 0), err
+		return make(map[string][]string), err
 	}
 
 	return graph.edgeList.Edges(), nil
+}
+
+// Note: This exists to make testing easier and will likely be removed in the future
+func (graph *DependencyGraph) WalkSync() (map[string][]string, error) {
+	searchableExtensions := regexp.MustCompile(`(\.js|\.jsx|\.ts|\.tsx)$`)
+	err := filepath.WalkDir(graph.rootPath, func(path string, info fs.DirEntry, err error) error {
+		if err != nil {
+			fmt.Printf("There was an error accessing path %q: %v\n", path, err)
+			return err
+		}
+
+		if info.IsDir() && graph.config.ShouldIgnore(path) {
+			fmt.Printf("Ran into an ignore directory: %q\n", info.Name())
+			return filepath.SkipDir
+		}
+
+		if searchableExtensions.MatchString(info.Name()) {
+			graph.readImportsSync(path)
+		}
+		return nil
+	})
+
+	if err != nil {
+		fmt.Printf("Got error: %s", err)
+		return make(map[string][]string), err
+	}
+
+	return graph.edgeList.Edges(), nil
+}
+
+func (graph *DependencyGraph) PrintPaths() {
+	searchableExtensions := regexp.MustCompile(`(\.js|\.jsx|\.ts|\.tsx)$`)
+	err := filepath.WalkDir(graph.rootPath, func(path string, info fs.DirEntry, err error) error {
+		if err != nil {
+			fmt.Printf("There was an error accessing path %q: %v\n", path, err)
+			return err
+		}
+
+		if info.IsDir() && graph.config.ShouldIgnore(path) {
+			fmt.Printf("Ran into an ignore directory: %q\n", info.Name())
+			return filepath.SkipDir
+		}
+
+		if searchableExtensions.MatchString(info.Name()) {
+			fmt.Printf("Found %q at path %s\n", info.Name(), path)
+		}
+		return nil
+	})
+	if err != nil {
+		fmt.Printf("Got error: %s", err)
+	}
 }
 
 // I need to look into if sharing resources on a struct is a problem. In that
@@ -124,6 +160,16 @@ func (graph *DependencyGraph) Walk() (map[string][]string, error) {
 // waste time reading files that won't have imports
 func (graph *DependencyGraph) readImports(filepath string, wg *sync.WaitGroup) {
 	defer wg.Done()
+	tk, err := tokenizer.NewTokenizerFromFile(filepath)
+	if err != nil {
+		fmt.Printf("WARN: Failed to read file from path %s.\nReceived error: %s\n Skipping...\n", filepath, err)
+	}
+	imports := tk.TokenizeImports()
+	graph.edgeList.Store(filepath, imports)
+}
+
+// Note: this exists to make testing easier and will likely be removed in the future
+func (graph *DependencyGraph) readImportsSync(filepath string) {
 	tk, err := tokenizer.NewTokenizerFromFile(filepath)
 	if err != nil {
 		fmt.Printf("WARN: Failed to read file from path %s.\nReceived error: %s\n Skipping...\n", filepath, err)
