@@ -14,6 +14,8 @@ type Config struct {
 	// These patterns should work with go's `filepath.Match` function, which means no recursive directory mathing.
 	// This is a pretty big limitation so I may want to add a glob library like https://github.com/gobwas/glob.
 	IgnorePatterns []string `json:"ignorePatterns"`
+	// This allows you to resolve paths like `'~/components/Foo'` or `'@monorepo/package/dir/file'`
+	PathAliases map[string]string `json:"pathAliases"`
 }
 
 func ReadConfig(path ...string) (*Config, error) {
