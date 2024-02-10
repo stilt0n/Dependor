@@ -5,6 +5,7 @@ import (
 	"dependor/lib/tokenizer"
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"regexp"
 	"sync"
@@ -31,11 +32,27 @@ type DependencyGraph struct {
 	rootPath string
 }
 
+func NewWithRootPath(rootPath string) *DependencyGraph {
+	if _, err := os.Stat(rootPath); err != nil {
+		panic(fmt.Sprintf("Root path does not appear to be a real path. See error:\n  %s\n", err))
+	}
+
+	cfg, err := config.ReadConfig(rootPath + "/dependor.json")
+	if err != nil {
+		// TODO: determine how best to handle / ignore errors
+		fmt.Printf("Recieved error but error might be due to using default config settings. See error: %s\n", err)
+	}
+	return &DependencyGraph{
+		config:   cfg,
+		rootPath: rootPath,
+	}
+}
+
 func New() *DependencyGraph {
 	cfg, err := config.ReadConfig()
 	if err != nil {
 		// TODO: determine how best to handle / ignore errors
-		fmt.Printf("Recieved error but error might be due to using default config settings. See error: %s", err)
+		fmt.Printf("Recieved error but error might be due to using default config settings. See error: %s\n", err)
 	}
 	return &DependencyGraph{
 		config:   cfg,
@@ -43,10 +60,33 @@ func New() *DependencyGraph {
 	}
 }
 
+func (graph *DependencyGraph) PrintPaths() {
+	searchableExtensions := regexp.MustCompile(`(\.js|\.jsx|\.ts|\.tsx)$`)
+	err := filepath.WalkDir(".", func(path string, info fs.DirEntry, err error) error {
+		if err != nil {
+			fmt.Printf("There was an error accessing path %q: %v\n", path, err)
+			return err
+		}
+
+		if info.IsDir() && graph.config.ShouldIgnore(path) {
+			fmt.Printf("Ran into an ignore directory: %q\n", info.Name())
+			return filepath.SkipDir
+		}
+
+		if searchableExtensions.MatchString(info.Name()) {
+			fmt.Printf("Found %q at path %s\n", info.Name(), path)
+		}
+		return nil
+	})
+	if err != nil {
+		fmt.Printf("Got error: %s", err)
+	}
+}
+
 // walks file tree starting from current directory and creates an import graph
 func (graph *DependencyGraph) Walk() (map[string][]string, error) {
 	// TODO: make this configurable
-	searchableExtensions := regexp.MustCompile("(.js|.jsx|.ts|.tsx)$")
+	searchableExtensions := regexp.MustCompile(`(\.js|\.jsx|\.ts|\.tsx)$`)
 	var wg sync.WaitGroup
 
 	err := filepath.WalkDir(".", func(path string, info fs.DirEntry, err error) error {

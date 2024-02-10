@@ -1,12 +1,10 @@
 package main
 
 import (
-	"dependor/lib/tokenizer"
-	"fmt"
+	"dependor/lib/dependencygraph"
 )
 
 func main() {
-	tk := tokenizer.New(`const foo = require("foo");`)
-	output := tk.TokenizeImports()
-	fmt.Println(output[0])
+	graph := dependencygraph.NewWithRootPath("./lib/dependencygraph")
+	graph.PrintPaths()
 }

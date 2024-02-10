@@ -16,14 +16,20 @@ type Config struct {
 	IgnorePatterns []string `json:"ignorePatterns"`
 }
 
-func ReadConfig() (*Config, error) {
+func ReadConfig(path ...string) (*Config, error) {
+	var readFrom string
+	if len(path) > 0 {
+		readFrom = path[0]
+	} else {
+		readFrom = config_file_name
+	}
 	defaultConfig := &Config{
 		IgnorePatterns: []string{"node_modules"},
 	}
-	// Right now we always expect the config file to be located int the current
-	// working directory but at some point it might make sense to bubble up and
-	// look for configs when inside a git repository
-	configFile, err := os.Open(config_file_name)
+	// By default we assume config is located in the same directory ReadConfig is called from
+	// But ReadConfig supports an optional path argument which allows you to read a config
+	// from elsewhere.
+	configFile, err := os.Open(readFrom)
 	if err != nil {
 		fmt.Println("Did not find config file in root dir. Using default config.")
 		return defaultConfig, err
