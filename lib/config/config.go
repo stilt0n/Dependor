@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const config_file_name = "dependor.json"
@@ -53,8 +54,8 @@ func ReadConfig(path ...string) (*Config, error) {
 	return &config, nil
 }
 
-func (c *Config) ShouldIgnore(path string) bool {
-	for _, p := range c.IgnorePatterns {
+func (cfg *Config) ShouldIgnore(path string) bool {
+	for _, p := range cfg.IgnorePatterns {
 		pathMatches, err := filepath.Match(p, path)
 		if err != nil {
 			// Panic here is probably not going to be the right choice in the long run but I think it will make finding bugs easier while developing
@@ -65,4 +66,16 @@ func (c *Config) ShouldIgnore(path string) bool {
 		}
 	}
 	return false
+}
+
+// Replaces the first matching alias found in the config or returns the orginal path
+// Assumes alias will be at the beginning of the path since that's generally how
+// imports are written in JavaScript
+func (cfg *Config) ReplaceAliases(path string) string {
+	for alias, replacement := range cfg.PathAliases {
+		if strings.HasPrefix(path, alias) {
+			return strings.Replace(path, alias, replacement, 1)
+		}
+	}
+	return path
 }

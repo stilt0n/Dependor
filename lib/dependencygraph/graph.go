@@ -154,10 +154,6 @@ func (graph *DependencyGraph) PrintPaths() {
 	}
 }
 
-// I need to look into if sharing resources on a struct is a problem. In that
-// case these may need to be refactored into non-recievers
-// Note: check that file is .js|.ts|.jsx etc... before calling this so we don't
-// waste time reading files that won't have imports
 func (graph *DependencyGraph) readImports(filepath string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	tk, err := tokenizer.NewTokenizerFromFile(filepath)
@@ -169,6 +165,8 @@ func (graph *DependencyGraph) readImports(filepath string, wg *sync.WaitGroup) {
 }
 
 // Note: this exists to make testing easier and will likely be removed in the future
+// It will also be useful for benchmarking against the concurrent version to make
+// sure that the concurrent version really improves performance
 func (graph *DependencyGraph) readImportsSync(filepath string) {
 	tk, err := tokenizer.NewTokenizerFromFile(filepath)
 	if err != nil {

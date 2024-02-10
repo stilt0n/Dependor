@@ -19,24 +19,35 @@ func TestReadConfig(t *testing.T) {
 	}
 
 	if success := testSliceMatch(t, cfg.IgnorePatterns, expectedIgnorePatterns); !success {
-		t.Errorf("recieved at least one incorrect ignore pattern")
+		t.Error("recieved at least one incorrect ignore pattern")
 	}
 
 	if success := testMapMatch(t, cfg.PathAliases, expectedAliases); !success {
-		t.Errorf("recieved at least on incorrect path alias")
+		t.Error("recieved at least on incorrect path alias")
+	}
+}
+
+func TestReplacePath(t *testing.T) {
+	cfg, err := ReadConfig()
+	if err != nil {
+		t.Fatalf("got an error when reading config. Error: %s\n", err)
+	}
+
+	if cfg.ReplaceAliases("@monorepo/package/component/Foo.tsx") != "root/package/component/Foo.tsx" {
+		t.Fatalf("Incorrect replacement for '@monorepo/package/component/Foo.tsx'")
 	}
 }
 
 func testSliceMatch(t *testing.T, recieved, expected []string) bool {
 	if len(recieved) != len(expected) {
-		t.Errorf("recieved array of length %d but expected array of length %d", len(recieved), len(expected))
+		t.Errorf("recieved array of length %d but expected array of length %d\n", len(recieved), len(expected))
 		return false
 	}
 
 	success := true
 	for index, item := range recieved {
 		if item != expected[index] {
-			t.Errorf("expected %q at index %d but recieved %q instead", expected[index], index, item)
+			t.Errorf("expected %q at index %d but recieved %q instead\n", expected[index], index, item)
 			success = false
 		}
 	}
@@ -45,7 +56,7 @@ func testSliceMatch(t *testing.T, recieved, expected []string) bool {
 
 func testMapMatch(t *testing.T, recieved, expected map[string]string) bool {
 	if len(recieved) != len(expected) {
-		t.Errorf("recieved map of length %d but expected map of length %d", len(recieved), len(expected))
+		t.Errorf("recieved map of length %d but expected map of length %d\n", len(recieved), len(expected))
 		return false
 	}
 
@@ -53,12 +64,12 @@ func testMapMatch(t *testing.T, recieved, expected map[string]string) bool {
 	for key, val := range recieved {
 		expectedValue, ok := expected[key]
 		if !ok {
-			t.Errorf("recieved unexpected key: %q", key)
+			t.Errorf("recieved unexpected key: %q\n", key)
 			success = false
 			continue
 		}
 		if val != expectedValue {
-			t.Errorf("expected value for key %q to be %q but recieved %q", key, expectedValue, val)
+			t.Errorf("expected value for key %q to be %q but recieved %q\n", key, expectedValue, val)
 			success = false
 		}
 	}
