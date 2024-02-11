@@ -30,10 +30,10 @@ func NewTokenizerFromFile(initPath string) (*Tokenizer, error) {
 		return &Tokenizer{}, err
 	}
 	fileString := string(file)
-	return new(fileString, filepath.Dir(initPath)), nil
+	return New(fileString, filepath.Dir(initPath)), nil
 }
 
-func new(fileString, callDir string) *Tokenizer {
+func New(fileString, callDir string) *Tokenizer {
 	t := Tokenizer{
 		currentIndex: 0,
 		fileRunes:    []rune(fileString),
