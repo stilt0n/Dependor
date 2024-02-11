@@ -8,7 +8,7 @@ import (
 func main() {
 	graph := dependencygraph.NewWithRootPath("./lib/dependencygraph")
 	graph.PrintPaths()
-	walked, err := graph.Walk()
+	walked, err := graph.WalkSync()
 	if err != nil {
 		fmt.Printf("Got an error. Error: %s", err)
 		return

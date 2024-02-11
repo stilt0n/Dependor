@@ -5,7 +5,7 @@ import "testing"
 func TestReadConfig(t *testing.T) {
 	cfg, err := ReadConfig()
 	expectedIgnorePatterns := []string{
-		"node_modules",
+		"**/node_modules",
 		"*/noRead.js",
 	}
 
@@ -15,7 +15,7 @@ func TestReadConfig(t *testing.T) {
 	}
 
 	if err != nil {
-		t.Fatalf("got an error when reading config. Error: %s\n", err)
+		t.Fatalf("got an error when reading config. error: %s\n", err)
 	}
 
 	if success := testSliceMatch(t, cfg.IgnorePatterns, expectedIgnorePatterns); !success {
@@ -30,11 +30,38 @@ func TestReadConfig(t *testing.T) {
 func TestReplacePath(t *testing.T) {
 	cfg, err := ReadConfig()
 	if err != nil {
-		t.Fatalf("got an error when reading config. Error: %s\n", err)
+		t.Fatalf("got an error when reading config. error: %s\n", err)
 	}
 
 	if cfg.ReplaceAliases("@monorepo/package/component/Foo.tsx") != "root/package/component/Foo.tsx" {
 		t.Fatalf("Incorrect replacement for '@monorepo/package/component/Foo.tsx'")
+	}
+}
+
+func TestIgnorePath(t *testing.T) {
+	cfg, err := ReadConfig()
+	if err != nil {
+		t.Fatalf("got an error when reading config. error: %s\n", err)
+	}
+
+	if !cfg.ShouldIgnore("node_modules") {
+		t.Error("expected node_modules to be ignored")
+	}
+
+	if !cfg.ShouldIgnore("base/node_modules") {
+		t.Error("expected base/node_modules to be ignored")
+	}
+
+	if !cfg.ShouldIgnore("whoo/this/is/pretty/nested/node_modules") {
+		t.Error("expected nested node_modules to be ignored")
+	}
+
+	if !cfg.ShouldIgnore("base/noRead.js") {
+		t.Error("expected base/noRead.js to be ignored")
+	}
+
+	if cfg.ShouldIgnore("this/path/is/ok") {
+		t.Error("expected this/path/is/ok not to be ignored")
 	}
 }
 

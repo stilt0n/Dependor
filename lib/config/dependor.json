@@ -1,5 +1,5 @@
 {
-  "ignorePatterns": ["node_modules", "*/noRead.js"],
+  "ignorePatterns": ["**/node_modules", "*/noRead.js"],
   "pathAliases": {
     "@monorepo/package": "root/package",
     "~": "root/home"

@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
+
+	"github.com/bmatcuk/doublestar/v4"
 )
 
 const config_file_name = "dependor.json"
@@ -27,7 +28,7 @@ func ReadConfig(path ...string) (*Config, error) {
 		readFrom = config_file_name
 	}
 	defaultConfig := &Config{
-		IgnorePatterns: []string{"node_modules"},
+		IgnorePatterns: []string{"**/node_modules"},
 	}
 	// By default we assume config is located in the same directory ReadConfig is called from
 	// But ReadConfig supports an optional path argument which allows you to read a config
@@ -55,11 +56,10 @@ func ReadConfig(path ...string) (*Config, error) {
 }
 
 func (cfg *Config) ShouldIgnore(path string) bool {
-	for _, p := range cfg.IgnorePatterns {
-		pathMatches, err := filepath.Match(p, path)
+	for _, pattern := range cfg.IgnorePatterns {
+		pathMatches, err := doublestar.PathMatch(pattern, path)
 		if err != nil {
-			// Panic here is probably not going to be the right choice in the long run but I think it will make finding bugs easier while developing
-			panic(fmt.Sprintf("Error using ignore patterns from dependor.json file. There may be a problem with the patterns. \n%s\n", err))
+			panic(fmt.Sprintf("there was an error with the config glob pattern %q. received error: %s", pattern, err))
 		}
 		if pathMatches {
 			return true
