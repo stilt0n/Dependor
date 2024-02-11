@@ -6,12 +6,12 @@ func TestWalk(t *testing.T) {
 	expected_tree := map[string][]string{
 		"test_tree/a.js":                 {"foo"},
 		"test_tree/b.ts":                 {"foo"},
-		"test_tree/util/c.js":            {"lodash", "express", "../b", "./fake_url/printFunc"},
+		"test_tree/util/c.js":            {"lodash", "express", "test_tree/b", "test_tree/util/fake_url/printFunc"},
 		"test_tree/src/components/d.jsx": {"react", "@remix-run/react"},
 		"test_tree/src/components/e.tsx": {},
 		"test_tree/src/components/f.tsx": {"react", "dynamic_data"},
 		"test_tree/src/hooks/g.ts":       {},
-		"test_tree/src/hooks/h.ts":       {"./g", "../../a", "./spurious_imports.txt"},
+		"test_tree/src/hooks/h.ts":       {"test_tree/src/hooks/g", "test_tree/a", "test_tree/src/hooks/spurious_imports.txt"},
 	}
 
 	dgraph := New()
