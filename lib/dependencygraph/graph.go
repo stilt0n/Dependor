@@ -42,7 +42,7 @@ func New() *DependencyGraph {
 	cfg, err := config.ReadConfig()
 	if err != nil {
 		// TODO: determine how best to handle / ignore errors
-		fmt.Printf("Recieved error but error might be due to using default config settings. See error: %s\n", err)
+		fmt.Printf("received error but error might be due to using default config settings. See error: %s\n", err)
 	}
 	return &DependencyGraph{
 		config:   cfg,
@@ -59,7 +59,7 @@ func NewWithRootPath(rootPath string) *DependencyGraph {
 	cfg, err := config.ReadConfig(rootPath + "/dependor.json")
 	if err != nil {
 		// TODO: determine how best to handle / ignore errors
-		fmt.Printf("Recieved error but error might be due to using default config settings. See error: %s\n", err)
+		fmt.Printf("received error but error might be due to using default config settings. See error: %s\n", err)
 	}
 	return &DependencyGraph{
 		config:   cfg,

@@ -19,11 +19,11 @@ func TestReadConfig(t *testing.T) {
 	}
 
 	if success := testSliceMatch(t, cfg.IgnorePatterns, expectedIgnorePatterns); !success {
-		t.Error("recieved at least one incorrect ignore pattern")
+		t.Error("received at least one incorrect ignore pattern")
 	}
 
 	if success := testMapMatch(t, cfg.PathAliases, expectedAliases); !success {
-		t.Error("recieved at least on incorrect path alias")
+		t.Error("received at least on incorrect path alias")
 	}
 }
 
@@ -65,38 +65,38 @@ func TestIgnorePath(t *testing.T) {
 	}
 }
 
-func testSliceMatch(t *testing.T, recieved, expected []string) bool {
-	if len(recieved) != len(expected) {
-		t.Errorf("recieved array of length %d but expected array of length %d\n", len(recieved), len(expected))
+func testSliceMatch(t *testing.T, received, expected []string) bool {
+	if len(received) != len(expected) {
+		t.Errorf("received array of length %d but expected array of length %d\n", len(received), len(expected))
 		return false
 	}
 
 	success := true
-	for index, item := range recieved {
+	for index, item := range received {
 		if item != expected[index] {
-			t.Errorf("expected %q at index %d but recieved %q instead\n", expected[index], index, item)
+			t.Errorf("expected %q at index %d but received %q instead\n", expected[index], index, item)
 			success = false
 		}
 	}
 	return success
 }
 
-func testMapMatch(t *testing.T, recieved, expected map[string]string) bool {
-	if len(recieved) != len(expected) {
-		t.Errorf("recieved map of length %d but expected map of length %d\n", len(recieved), len(expected))
+func testMapMatch(t *testing.T, received, expected map[string]string) bool {
+	if len(received) != len(expected) {
+		t.Errorf("received map of length %d but expected map of length %d\n", len(received), len(expected))
 		return false
 	}
 
 	success := true
-	for key, val := range recieved {
+	for key, val := range received {
 		expectedValue, ok := expected[key]
 		if !ok {
-			t.Errorf("recieved unexpected key: %q\n", key)
+			t.Errorf("received unexpected key: %q\n", key)
 			success = false
 			continue
 		}
 		if val != expectedValue {
-			t.Errorf("expected value for key %q to be %q but recieved %q\n", key, expectedValue, val)
+			t.Errorf("expected value for key %q to be %q but received %q\n", key, expectedValue, val)
 			success = false
 		}
 	}

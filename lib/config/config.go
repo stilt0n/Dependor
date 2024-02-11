@@ -48,7 +48,7 @@ func ReadConfig(path ...string) (*Config, error) {
 	var config Config
 	err = json.Unmarshal(bytes, &config)
 	if err != nil {
-		fmt.Printf("WARN: recieved an error while parsing defendor.json. Using default config as a fallback. See error below for more details:\n%s\n", err)
+		fmt.Printf("WARN: received an error while parsing defendor.json. Using default config as a fallback. See error below for more details:\n%s\n", err)
 		return defaultConfig, err
 	}
 
