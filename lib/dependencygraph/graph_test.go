@@ -4,19 +4,21 @@ import "testing"
 
 func TestWalk(t *testing.T) {
 	expected_tree := map[string][]string{
-		"test_tree/a.js":                 {"foo"},
-		"test_tree/b.ts":                 {"foo"},
-		"test_tree/util/c.js":            {"lodash", "express", "test_tree/b", "test_tree/util/fake_url/printFunc"},
-		"test_tree/src/components/d.jsx": {"react", "@remix-run/react"},
-		"test_tree/src/components/e.tsx": {},
-		"test_tree/src/components/f.tsx": {"react", "dynamic_data"},
-		"test_tree/src/hooks/g.ts":       {},
-		"test_tree/src/hooks/h.ts":       {"test_tree/src/hooks/g", "test_tree/a", "test_tree/src/hooks/spurious_imports.txt"},
+		"test_tree/a.js":                      {"foo"},
+		"test_tree/b.ts":                      {"foo"},
+		"test_tree/util/c.js":                 {"lodash", "express", "test_tree/b.ts", "test_tree/util/fake_url/printFunc"},
+		"test_tree/src/components/d.jsx":      {"react", "@remix-run/react", "test_tree/src/components/i/index.js"},
+		"test_tree/src/components/e.tsx":      {},
+		"test_tree/src/components/i/i.jsx":    {},
+		"test_tree/src/components/i/index.js": {},
+		"test_tree/src/components/f.tsx":      {"react", "dynamic_data"},
+		"test_tree/src/hooks/g.ts":            {},
+		"test_tree/src/hooks/h.ts":            {"test_tree/src/hooks/g.ts", "test_tree/a.js", "test_tree/src/hooks/spurious_imports.txt"},
 	}
 
 	dgraph := New()
 
-	tree, err := dgraph.Walk()
+	tree, err := dgraph.WalkSync()
 
 	if err != nil {
 		t.Fatalf("Expected no error. Got: %s\n", err)

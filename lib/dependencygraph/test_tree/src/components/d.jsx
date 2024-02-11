@@ -4,6 +4,7 @@ import {
   useNavigation,
   useSearchParams,
 } from '@remix-run/react';
+import { IComponent } from './i';
 
 export const Component = () => (
   <Import>

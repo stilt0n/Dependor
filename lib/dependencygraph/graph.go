@@ -100,6 +100,8 @@ func (graph *DependencyGraph) Walk() (map[string][]string, error) {
 		return make(map[string][]string), err
 	}
 
+	graph.resolveImportExtensions()
+
 	return graph.edgeList.Edges(), nil
 }
 
@@ -127,6 +129,8 @@ func (graph *DependencyGraph) WalkSync() (map[string][]string, error) {
 		fmt.Printf("Got error: %s", err)
 		return make(map[string][]string), err
 	}
+
+	graph.resolveImportExtensions()
 
 	return graph.edgeList.Edges(), nil
 }
@@ -174,4 +178,39 @@ func (graph *DependencyGraph) readImportsSync(filepath string) {
 	}
 	imports := tk.TokenizeImports()
 	graph.edgeList.Store(filepath, imports)
+}
+
+// TODO: Optimize
+func (graph *DependencyGraph) resolveImportExtensions() {
+	edges := graph.edgeList.Edges()
+	for file, imports := range edges {
+		var updated []string
+		for _, path := range imports {
+			updated = append(updated, withExtension(edges, path))
+		}
+		graph.edgeList.Store(file, updated)
+	}
+}
+
+// TODO: check if this performs better using precompiled regular expression
+// TODO: handle cases like `import { x } from '.';`
+func withExtension(pathMap map[string][]string, path string) string {
+	extensions := []string{
+		".js",
+		".ts",
+		".jsx",
+		".tsx",
+		"/index.js",
+		"/index.ts",
+		"/index.jsx",
+		"/index.tsx",
+	}
+
+	for _, extension := range extensions {
+		if _, ok := pathMap[path+extension]; ok {
+			return path + extension
+		}
+	}
+
+	return path
 }
