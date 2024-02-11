@@ -7,6 +7,7 @@ package tokenizer
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"unicode"
 )
@@ -20,22 +21,24 @@ type Tokenizer struct {
 	currentIndex int
 	fileRunes    []rune
 	imports      []string
+	callDir      string
 }
 
-func NewTokenizerFromFile(filepath string) (*Tokenizer, error) {
-	file, err := os.ReadFile(filepath)
+func NewTokenizerFromFile(initPath string) (*Tokenizer, error) {
+	file, err := os.ReadFile(initPath)
 	if err != nil {
 		return &Tokenizer{}, err
 	}
 	fileString := string(file)
-	return New(fileString), nil
+	return new(fileString, filepath.Dir(initPath)), nil
 }
 
-func New(fileString string) *Tokenizer {
+func new(fileString, callDir string) *Tokenizer {
 	t := Tokenizer{
 		currentIndex: 0,
 		fileRunes:    []rune(fileString),
 		imports:      []string{},
+		callDir:      callDir,
 	}
 	return &t
 }
@@ -151,7 +154,11 @@ func (t *Tokenizer) readImportString() {
 		return
 	}
 
-	t.imports = append(t.imports, b.String())
+	path := b.String()
+	if isRelativePath(path) {
+		path = filepath.Join(t.callDir, path)
+	}
+	t.imports = append(t.imports, path)
 }
 
 func (t *Tokenizer) skipSingleLineComment() {
@@ -233,4 +240,8 @@ func (t *Tokenizer) advanceChars(args ...int) {
 
 func isQuote(c rune) bool {
 	return c == '\'' || c == '"' || c == '`'
+}
+
+func isRelativePath(path string) bool {
+	return strings.HasPrefix(path, ".")
 }
