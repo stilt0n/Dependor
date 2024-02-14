@@ -20,7 +20,9 @@ const (
 type Tokenizer struct {
 	currentIndex int
 	fileRunes    []rune
-	imports      []string
+	imports      []ImportToken
+	reExports    []string
+	exports      []string
 	callDir      string
 }
 
@@ -37,7 +39,9 @@ func New(fileString, callDir string) *Tokenizer {
 	t := Tokenizer{
 		currentIndex: 0,
 		fileRunes:    []rune(fileString),
-		imports:      []string{},
+		imports:      []ImportToken{},
+		reExports:    []string{},
+		exports:      []string{},
 		callDir:      callDir,
 	}
 	return &t
@@ -47,9 +51,9 @@ func New(fileString, callDir string) *Tokenizer {
 // e.g. nested requires `require(require('./pathToRealImport'))`
 // Supporting this case seems challenging and I don't think it's currently worth my effort
 // Reads all import paths from a file in one pass and returns them in an array
-func (t *Tokenizer) TokenizeImports() []string {
+func (t *Tokenizer) TokenizeImports() FileToken {
 	if len(t.fileRunes) < 1 {
-		return t.imports
+		return FileToken{}
 	}
 
 	for t.currentIndex < t.end() {
@@ -64,7 +68,12 @@ func (t *Tokenizer) TokenizeImports() []string {
 		}
 		t.advanceChars()
 	}
-	return t.imports
+	return FileToken{
+		FilePath:  t.callDir,
+		Imports:   t.imports,
+		ReExports: t.reExports,
+		Exports:   t.exports,
+	}
 }
 
 func (t *Tokenizer) skipComment(peekChar rune) {
@@ -158,7 +167,7 @@ func (t *Tokenizer) readImportString() {
 	if isRelativePath(path) {
 		path = filepath.Join(t.callDir, path)
 	}
-	t.imports = append(t.imports, path)
+	t.imports = append(t.imports, ImportToken{ImportPath: path})
 }
 
 func (t *Tokenizer) skipSingleLineComment() {
