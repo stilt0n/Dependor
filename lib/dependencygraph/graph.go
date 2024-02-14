@@ -192,7 +192,6 @@ func (graph *DependencyGraph) resolveImportExtensions() {
 	}
 }
 
-// TODO: check if this performs better using precompiled regular expression
 // TODO: handle cases like `import { x } from '.';`
 func withExtension(pathMap map[string][]string, path string) string {
 	extensions := []string{
