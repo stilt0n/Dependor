@@ -1,6 +1,7 @@
 package tokenizer
 
 import (
+	"slices"
 	"testing"
 )
 
@@ -75,7 +76,8 @@ func TestTokenizeFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected successful file read. Got error: %s", err)
 	}
-	output := tokenizer.TokenizeImports()
+	result := tokenizer.TokenizeImports()
+	output := result.ImportStrings()
 	expected := []string{
 		"fs",
 		"foo",
@@ -91,9 +93,80 @@ func TestTokenizeFile(t *testing.T) {
 		"testfiles/nested/space/bar.json",
 		"tricky",
 	}
-	for i, imp := range output.ImportStrings() {
+	slices.Sort(expected)
+	slices.Sort(output)
+	for i, imp := range output {
 		if imp != expected[i] {
 			t.Errorf("Error in example %d.\n  Got: %s\n  Expected: %s", i, imp, expected[i])
+		}
+	}
+}
+
+func TestTokenizeExports(t *testing.T) {
+	tokenizer, err := NewTokenizerFromFile("./testfiles/nested/test2.js")
+	if err != nil {
+		t.Fatalf("Expected successful file read. Got error: %s", err)
+	}
+
+	expectedExports := []string{
+		"five",
+		"foo",
+		"bar",
+		"baz",
+		"default",
+	}
+
+	expectedImportIdents := []string{"default", "example"}
+
+	tokenizedFile := tokenizer.TokenizeImports()
+
+	if len(tokenizedFile.Imports) != 1 {
+		t.Fatalf("Wrong length for imports. Expected 1 received %d", len(tokenizedFile.Imports))
+	}
+
+	exampleIdents, ok := tokenizedFile.Imports["example"]
+
+	if !ok {
+		t.Fatal("Expected \"example\" to be in import paths")
+	}
+
+	for i, ident := range exampleIdents {
+		if ident != expectedImportIdents[i] {
+			t.Errorf("Wrong import for index %d. Expected %q received %q", i, expectedImportIdents[i], ident)
+		}
+	}
+
+	if len(tokenizedFile.Exports) != len(expectedExports) {
+		t.Fatalf("Expected exports length to be %d but received length %d", len(expectedExports), len(tokenizedFile.Exports))
+	}
+
+	for i, ident := range tokenizedFile.Exports {
+		if ident != expectedExports[i] {
+			t.Errorf("Wrong export for index %d. Expected %q received %q", i, expectedExports[i], ident)
+		}
+	}
+}
+
+func TestReExports(t *testing.T) {
+	expectedReExports := []string{
+		"./test",
+		"./test2",
+	}
+
+	tokenizer, err := NewTokenizerFromFile("./testfiles/nested/index.js")
+	if err != nil {
+		t.Fatalf("Expected successful file read. Got error: %s", err)
+	}
+
+	tokenizedFile := tokenizer.TokenizeImports()
+
+	if len(tokenizedFile.ReExports) != len(expectedReExports) {
+		t.Fatalf("Expected %d re-exports but received %d", len(expectedReExports), len(tokenizedFile.ReExports))
+	}
+
+	for i, rex := range tokenizedFile.ReExports {
+		if rex != expectedReExports[i] {
+			t.Errorf("Expected re-export at index %d to be %q but received %q", i, expectedReExports[i], rex)
 		}
 	}
 }
