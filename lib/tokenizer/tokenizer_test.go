@@ -6,7 +6,8 @@ import (
 
 func TestTerminates(t *testing.T) {
 	tk := New(`const foo = 5;`, "./testfiles")
-	output := tk.TokenizeImports()
+	result := tk.TokenizeImports()
+	output := result.ImportStrings()
 	if len(output) != 0 {
 		t.Fatalf("Should not be any import tokens")
 	}
@@ -14,7 +15,8 @@ func TestTerminates(t *testing.T) {
 
 func TestSimpleRequire(t *testing.T) {
 	tokenizer := New(`const foo = require("./foo");`, ".")
-	output := tokenizer.TokenizeImports()
+	result := tokenizer.TokenizeImports()
+	output := result.ImportStrings()
 	if len(output) != 1 {
 		t.Fatalf("Expected output to be length 1. Got %d", len(output))
 	}
@@ -25,7 +27,8 @@ func TestSimpleRequire(t *testing.T) {
 
 func TestImportComments(t *testing.T) {
 	tokenizer := New(`const igloo = require/* rude */  /* ugh*/( /* why */"./igloo");`, ".")
-	output := tokenizer.TokenizeImports()
+	result := tokenizer.TokenizeImports()
+	output := result.ImportStrings()
 	if len(output) != 1 {
 		t.Fatalf("Expected output to be length 1. Got %d", len(output))
 	}
@@ -36,7 +39,8 @@ func TestImportComments(t *testing.T) {
 
 func TestSimpleImport(t *testing.T) {
 	tokenizer := New(`import foo from "./foo";`, ".")
-	output := tokenizer.TokenizeImports()
+	result := tokenizer.TokenizeImports()
+	output := result.ImportStrings()
 	if len(output) != 1 {
 		t.Fatalf("Expected output to be length 1. Got %d", len(output))
 	}
@@ -47,7 +51,8 @@ func TestSimpleImport(t *testing.T) {
 
 func TestDynamicImport(t *testing.T) {
 	tokenizer := New(`const foo = await import("./foo");`, ".")
-	output := tokenizer.TokenizeImports()
+	result := tokenizer.TokenizeImports()
+	output := result.ImportStrings()
 	if len(output) != 1 {
 		t.Fatalf("Expected output to be length 1. Got %d", len(output))
 	}
@@ -58,7 +63,8 @@ func TestDynamicImport(t *testing.T) {
 
 func TestInvalidImport(t *testing.T) {
 	tokenizer := New(`import hello there`, ".")
-	output := tokenizer.TokenizeImports()
+	result := tokenizer.TokenizeImports()
+	output := result.ImportStrings()
 	if len(output) != 0 {
 		t.Fatalf("Expected no imports to be output. Got %s", output[0])
 	}
@@ -85,7 +91,7 @@ func TestTokenizeFile(t *testing.T) {
 		"testfiles/nested/space/bar.json",
 		"tricky",
 	}
-	for i, imp := range output {
+	for i, imp := range output.ImportStrings() {
 		if imp != expected[i] {
 			t.Errorf("Error in example %d.\n  Got: %s\n  Expected: %s", i, imp, expected[i])
 		}

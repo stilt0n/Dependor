@@ -55,7 +55,6 @@ I am not tracking common js exports for now since I only track exports to correc
 The export cases I'm currently considering are:
 
 ```js
-export foo;
 export const foo = [...etc];
 export { foo, bar, baz };
 export default etc;
