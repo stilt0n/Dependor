@@ -20,7 +20,7 @@ const (
 type Tokenizer struct {
 	currentIndex int
 	fileRunes    []rune
-	imports      []ImportToken
+	imports      map[string][]string
 	reExports    []string
 	exports      []string
 	callDir      string
@@ -39,7 +39,7 @@ func New(fileString, callDir string) *Tokenizer {
 	t := Tokenizer{
 		currentIndex: 0,
 		fileRunes:    []rune(fileString),
-		imports:      []ImportToken{},
+		imports:      make(map[string][]string, 0),
 		reExports:    []string{},
 		exports:      []string{},
 		callDir:      callDir,
@@ -167,7 +167,7 @@ func (t *Tokenizer) readImportString() {
 	if isRelativePath(path) {
 		path = filepath.Join(t.callDir, path)
 	}
-	t.imports = append(t.imports, ImportToken{ImportPath: path})
+	t.imports[path] = []string{}
 }
 
 func (t *Tokenizer) skipSingleLineComment() {

@@ -1,22 +1,19 @@
 package tokenizer
 
-type ImportToken struct {
-	ImportPath          string
-	ImportedIdentifiers []string
-}
-
 type FileToken struct {
 	FilePath  string
-	Imports   []ImportToken
+	Imports   map[string][]string
 	ReExports []string
 	Exports   []string
 }
 
 // Utilties for testing
 func (f *FileToken) ImportStrings() []string {
-	var importStrings []string
-	for _, imp := range f.Imports {
-		importStrings = append(importStrings, imp.ImportPath)
+	importStrings := make([]string, len(f.Imports))
+	i := 0
+	for pth := range f.Imports {
+		importStrings[i] = pth
+		i++
 	}
 	return importStrings
 }
