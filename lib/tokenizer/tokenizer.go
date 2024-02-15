@@ -8,6 +8,7 @@ package tokenizer
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"unicode"
 )
@@ -109,6 +110,7 @@ func (t *Tokenizer) tokenizeImport() {
 		return
 	}
 
+	identifiers := t.tokenizeImportIdentifiers()
 	// This will allow some incorrect syntax to be treated as an import, e.g. import './not/a/real/import'
 	// But fixing that is low priority for now
 	for t.currentIndex < t.end() && !isQuote(t.current()) {
@@ -122,7 +124,10 @@ func (t *Tokenizer) tokenizeImport() {
 		t.advanceChars()
 	}
 
-	t.readImportString()
+	importPath, ok := t.readImportString()
+	if ok {
+		t.imports[importPath] = identifiers
+	}
 }
 
 func (t *Tokenizer) tokenizeRequire() {
@@ -148,10 +153,13 @@ func (t *Tokenizer) tokenizeRequire() {
 	if !isQuote(t.current()) {
 		return
 	}
-	t.readImportString()
+	path, ok := t.readImportString()
+	if ok {
+		t.imports[path] = []string{}
+	}
 }
 
-func (t *Tokenizer) readImportString() {
+func (t *Tokenizer) readImportString() (string, bool) {
 	var b strings.Builder
 	t.advanceChars()
 	for t.currentIndex < t.end() && !isQuote(t.current()) {
@@ -160,14 +168,14 @@ func (t *Tokenizer) readImportString() {
 	}
 
 	if t.currentIndex >= t.end() {
-		return
+		return "", false
 	}
 
 	path := b.String()
 	if isRelativePath(path) {
 		path = filepath.Join(t.callDir, path)
 	}
-	t.imports[path] = []string{}
+	return path, true
 }
 
 func (t *Tokenizer) skipSingleLineComment() {
@@ -194,7 +202,66 @@ func (t *Tokenizer) skipImportComments() {
 		if t.peek() == '*' {
 			t.skipMultiLineComment()
 			t.skipWhitespace()
+		} else if t.peek() == '/' {
+			t.skipSingleLineComment()
+			t.skipWhitespace()
 		}
+	}
+}
+
+func (t *Tokenizer) tokenizeImportIdentifiers() []string {
+	endChars := []rune{';', '(', '"', '\'', '`'}
+	stopChars := []rune{',', '{', '}', '/'}
+	var currentIdentifier []rune
+	var identifiers []string
+	isDefault := true
+	for t.currentIndex < t.end() && !slices.Contains(endChars, t.current()) {
+		if current := t.current(); slices.Contains(stopChars, current) || unicode.IsSpace(current) {
+			ident := string(currentIdentifier)
+			if ident == "as" {
+				t.skipNextIdentifier()
+			} else if ident == "from" {
+				break
+			} else if len(ident) > 0 {
+				if isDefault {
+					identifiers = append(identifiers, "default")
+				} else {
+					identifiers = append(identifiers, ident)
+				}
+			}
+
+			currentIdentifier = []rune{}
+
+			switch current {
+			case '{':
+				isDefault = false
+			case '}':
+				isDefault = true
+			case '/':
+				if t.peek() == '*' || t.peek() == '/' {
+					t.skipImportComments()
+					continue
+				}
+			}
+		} else {
+			currentIdentifier = append(currentIdentifier, current)
+		}
+
+		t.advanceChars()
+	}
+
+	return identifiers
+}
+
+// Assumes correct syntax. This would fail for the case `as from "./path";`
+func (t *Tokenizer) skipNextIdentifier() {
+	endChars := []rune{';', '(', ',', '{', '}'}
+	t.skipWhitespace()
+	for current := t.current(); t.currentIndex < t.end() && !slices.Contains(endChars, current) && !unicode.IsSpace(current); current = t.current() {
+		if current == '/' && (t.peek() == '*' || t.peek() == '/') {
+			t.skipImportComments()
+		}
+		t.advanceChars()
 	}
 }
 

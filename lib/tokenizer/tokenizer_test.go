@@ -102,6 +102,41 @@ func TestTokenizeFile(t *testing.T) {
 	}
 }
 
+func TestTokenizeIdentifiers(t *testing.T) {
+	expected := map[string][]string{
+		"testfiles/foo":        {"default", "a", "b", "c"},
+		"testfiles/nested/bar": {"item"},
+		"testfiles/nested/baz": {"ident", "bar"},
+		"just-the-path":        {},
+	}
+	tokenizer, err := NewTokenizerFromFile("./testfiles/nested/test_idents.js")
+	if err != nil {
+		t.Fatalf("Expected successful file read. Got error: %s", err)
+	}
+	tokenizedFile := tokenizer.TokenizeImports()
+
+	if len(tokenizedFile.Imports) != len(expected) {
+		t.Fatalf("Number of imports (%d) does not match expected number (%d)", len(tokenizedFile.Imports), len(expected))
+	}
+
+	for pth, idents := range tokenizedFile.Imports {
+		expectedIdents, ok := expected[pth]
+		if !ok {
+			t.Fatalf("Received path %q which is not in imported paths", pth)
+		}
+
+		if len(idents) != len(expectedIdents) {
+			t.Fatalf("Wrong number of identifiers for path %q. Expected %d received %d", pth, len(expectedIdents), len(idents))
+		}
+
+		for i, ident := range idents {
+			if ident != expectedIdents[i] {
+				t.Errorf("Expected %q for identifier at index %d but received %q", expectedIdents[i], i, ident)
+			}
+		}
+	}
+}
+
 func TestTokenizeExports(t *testing.T) {
 	tokenizer, err := NewTokenizerFromFile("./testfiles/nested/test2.js")
 	if err != nil {
