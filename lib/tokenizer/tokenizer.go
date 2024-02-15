@@ -16,6 +16,7 @@ import (
 const (
 	REQUIRE_LENGTH = 7
 	IMPORT_LENGTH  = 6
+	EXPORT_LENGTH  = 6
 )
 
 type Tokenizer struct {
@@ -64,6 +65,8 @@ func (t *Tokenizer) TokenizeImports() FileToken {
 			t.tokenizeImport()
 		case 'r':
 			t.tokenizeRequire()
+		case 'e':
+			t.tokenizeExport()
 		case '/':
 			t.skipComment(t.peek())
 		}
@@ -125,9 +128,11 @@ func (t *Tokenizer) tokenizeImport() {
 	}
 
 	importPath, ok := t.readImportString()
-	if ok {
-		t.imports[importPath] = identifiers
+	if !ok {
+		return
 	}
+
+	t.imports[importPath] = identifiers
 }
 
 func (t *Tokenizer) tokenizeRequire() {
@@ -157,6 +162,54 @@ func (t *Tokenizer) tokenizeRequire() {
 	if ok {
 		t.imports[path] = []string{}
 	}
+}
+
+func (t *Tokenizer) tokenizeExport() {
+	if t.currentIndex+EXPORT_LENGTH > t.end() {
+		return
+	}
+
+	// the word `export` could be used in a variable name so this protects against that
+	if t.currentIndex != 0 && t.prev() != ';' && !unicode.IsSpace(t.prev()) {
+		return
+	}
+
+	if string(t.fileRunes[t.currentIndex:t.currentIndex+EXPORT_LENGTH]) != "export" {
+		return
+	}
+
+	t.advanceChars(EXPORT_LENGTH)
+	// in this case export is probably part of a variable name
+	if t.current() != '{' && !unicode.IsSpace(t.current()) {
+		return
+	}
+
+	identifiers, isRegularExport := t.tokenizeExportIdentifiers()
+
+	if isRegularExport {
+		t.exports = append(t.exports, identifiers...)
+		return
+	}
+
+	// TODO: This is used multiple times and could probably be abstracted to a `findQuote` function
+	// in this case we are dealing with a re-export so we need to find the next string literal
+	for current := t.current(); t.currentIndex < t.end() && !isQuote(current); current = t.current() {
+		if current == ';' || current == ')' {
+			return
+		}
+		if current == '/' {
+			// Avoids interpreting quotes inside of comments as strings
+			t.skipImportComments()
+		}
+		t.advanceChars()
+	}
+
+	reExportPath, ok := t.readImportString()
+	if !ok {
+		return
+	}
+
+	t.reExports = append(t.reExports, reExportPath)
 }
 
 func (t *Tokenizer) readImportString() (string, bool) {
@@ -251,6 +304,53 @@ func (t *Tokenizer) tokenizeImportIdentifiers() []string {
 	}
 
 	return identifiers
+}
+
+// returns false when 'from' token is encountered
+func (t *Tokenizer) tokenizeExportIdentifiers() ([]string, bool) {
+	// TODO: recreating and garbage collecting this on each function call is probably bad for performance
+	keywords := []string{"const", "let", "var", "function"}
+	stopChars := []rune{',', '{', '}', '/'}
+	endChars := []rune{'=', ';'}
+
+	var currentIdentifier []rune
+	var identifiers []string
+	// When `default`` is inside of curly braces it means we are re-exporting
+	// in this case we need to return false
+	haveSeenLeftBrace := false
+
+	for t.currentIndex < t.end() && !slices.Contains(endChars, t.current()) {
+		if current := t.current(); slices.Contains(stopChars, current) || unicode.IsSpace(current) {
+			if current == '{' {
+				haveSeenLeftBrace = true
+			}
+			ident := string(currentIdentifier)
+			switch ident {
+			case "as":
+				t.skipNextIdentifier()
+			case "from":
+				return []string{}, false
+			case "default":
+				return []string{"default"}, !haveSeenLeftBrace
+			default:
+				if !slices.Contains(keywords, ident) && len(ident) > 0 {
+					identifiers = append(identifiers, ident)
+				}
+			}
+
+			currentIdentifier = []rune{}
+			if current == '/' && (t.peek() == '/' || t.peek() == '*') {
+				t.skipImportComments()
+				continue
+			}
+		} else {
+			currentIdentifier = append(currentIdentifier, current)
+		}
+
+		t.advanceChars()
+	}
+
+	return identifiers, true
 }
 
 // Assumes correct syntax. This would fail for the case `as from "./path";`
