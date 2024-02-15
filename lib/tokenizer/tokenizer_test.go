@@ -184,8 +184,8 @@ func TestTokenizeExports(t *testing.T) {
 
 func TestReExports(t *testing.T) {
 	expectedReExports := []string{
-		"./test",
-		"./test2",
+		"testfiles/nested/test",
+		"testfiles/nested/test2",
 	}
 
 	tokenizer, err := NewTokenizerFromFile("./testfiles/nested/index.js")
