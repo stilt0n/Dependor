@@ -164,8 +164,8 @@ func (graph *DependencyGraph) readImports(filepath string, wg *sync.WaitGroup) {
 	if err != nil {
 		fmt.Printf("WARN: Failed to read file from path %s.\nReceived error: %s\n Skipping...\n", filepath, err)
 	}
-	imports := tk.TokenizeImports()
-	graph.edgeList.Store(filepath, imports)
+	tokenizedFile := tk.TokenizeImports()
+	graph.edgeList.Store(filepath, tokenizedFile.ImportStrings())
 }
 
 // Note: this exists to make testing easier and will likely be removed in the future
@@ -176,8 +176,9 @@ func (graph *DependencyGraph) readImportsSync(filepath string) {
 	if err != nil {
 		fmt.Printf("WARN: Failed to read file from path %s.\nReceived error: %s\n Skipping...\n", filepath, err)
 	}
-	imports := tk.TokenizeImports()
-	graph.edgeList.Store(filepath, imports)
+	tokenizedFile := tk.TokenizeImports()
+	// TODO: rewrite graph to use FileTokens
+	graph.edgeList.Store(filepath, tokenizedFile.ImportStrings())
 }
 
 // TODO: Optimize
