@@ -1,6 +1,9 @@
 package dependencygraph
 
-import "testing"
+import (
+	"slices"
+	"testing"
+)
 
 func TestWalk(t *testing.T) {
 	expected_tree := map[string][]string{
@@ -34,6 +37,10 @@ func TestWalk(t *testing.T) {
 			t.Fatalf("Wrong number of items in adjaceny list for %q. Got %d. Expected %d\n", k, len(v), len(expected))
 		}
 
+		// Now that tokenized imports are returned in a map the ordering is non-deterministic
+		// This test should be rewritten when dependencygraph is rewritten to use FileTokens
+		slices.Sort(expected)
+		slices.Sort(v)
 		for i, p := range v {
 			if expected[i] != p {
 				t.Errorf("Expected import path at index %d to be %q. Got %q\n", i, expected[i], p)
