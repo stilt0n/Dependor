@@ -1,6 +1,6 @@
 # Overview
 
-This package converts JavaScript (or related) into tokens that can be used to build a dependency graph.
+This package converts JavaScript (or TypeScript) into tokens which can be used when parsing a file tree into a dependency graph.
 
 ## How it works
 
@@ -11,29 +11,30 @@ The tokenizer reads each character one at a time and finds:
 - imported tokens
 - exported tokens
 
-Imported identifiers need to be associated with their paths, so they are grouped in an `importToken` struct:
+Imported identifiers need to be associated with their paths, so they stored in a map:
 
 ```go
-type importToken struct {
-	importPath          string
-	importedIdentifiers []string
-}
+// In the code these are just unaliased strings
+// but here the aliases are added for clarity
+type importPath string
+type importedIdentifier string
+type Imports map[importPath][]importedIdentifier
 ```
 
 This makes the type for file token:
 
 ```go
 type fileToken struct {
-	filePath  string
-	imports   []importToken
-  reExports []string
-	exports   []string
+	FilePath  string
+	Imports   map[string][]string
+  ReExports []string
+	Exports   []string
 }
 ```
 
 ### Finding imports
 
-For dynamic imports and require statements I am only tracking the import paths because, at least for my current use case, that is sufficient.
+For dynamic imports and require statements only the import paths are tracked because additional information is unnecessary to resolve those paths.
 
 For esmodule imports:
 
@@ -50,7 +51,7 @@ The tokenizer assumes that it is being given valid JavaScript syntax. Syntax err
 
 ### Exports
 
-I am not tracking common js exports for now since I only track exports to correctly route re-exports. I don't think you can re-export in common js and I am generally assuming that people are not mixing es exports and common js require statements in a way where they are re-exporting from a common js file. I am also assuming dynamic imports are not re-exported.
+I am not tracking common js exports for now since I only track exports to allow me correctly route re-exports at parse time. I don't think you can re-export in common js and I am generally assuming that people are not mixing es exports and common js require statements in a way where they are re-exporting from a common js file. I also don't think you can re-export dynamic imports.
 
 The export cases I'm currently considering are:
 
@@ -70,7 +71,7 @@ We also need to deal with re-exports:
 export { foo, bar, baz } from "./foo";
 ```
 
-Here, we need to make sure we don't treat the re-exports as exports since they are just being forwarded from another file. When we run into the `from` token, then the exported identifiers should be ignored and the follwing path should be saved to `reExports`.
+Here, we need to make sure we don't treat the re-exports as exports since they are just being forwarded from another file. When we run into the `from` token, then the exported identifiers should be ignored and the following path should be saved to `reExports`.
 
 ### Re-exports
 
@@ -78,11 +79,11 @@ Since these are always preceded by the `export` token, we can handle them in the
 
 #### Re-export identifiers
 
-We could potentially store these in the future I am choosing to treat all `export ... from 'file';` statements as if they were `export * from 'file';`. Since files track their own exports, storing a file path is sufficient to find the related exports. Since I don't currently need anything more granular than which files import from which other files I have decided it is not worth storing this information two places.
+We could potentially store these in the future, but for now I am choosing to treat all `export ... from 'file';` statements as if they were `export * from 'file';`. Since files track their own exports, storing a file path is sufficient to find the related exports. Since I don't currently need anything more granular than which files import from which other files I have decided it is not worth storing this information two places.
 
 ## Why a tokenizer?
 
-I first tried to find imports using reglar expressions. Finding a standard import / re-export is pretty simple since we're just looking for anything between `from <quote-char>` and `<quote-char>`. But the ability to put comments in nasty places makes this much harder to solve with regex, and Go's lack of support for lookbehind doesn't help make this easier and since lookbehind is not supported due to performance concerns, I didn't think it made sense to look for a library to handle this.
+I first tried to find imports using reglar expressions. Finding a standard import / re-export is pretty simple since we're just looking for anything between `from <quote-char>` and `<quote-char>`. But the ability to put comments in weird places makes this much harder to solve with regex. Go's lack of support for lookbehind further complicates this approach and since it turns out lookbehind is not supported due to performance concerns, I didn't think it made sense to look for a library to handle this.
 
 If this was the only issue, I'd probably be content to let:
 
@@ -90,9 +91,9 @@ If this was the only issue, I'd probably be content to let:
 import foo from /* "fake-import" */ "real-import";
 ```
 
-remain a bug since I don't think people generally do this, or at the very least it's a use-case I care a lot about.
+remain a bug since I don't think people generally do this, or at the very least it's not a use-case I care a lot about.
 
-The main challenge is that esmodules allow you to re-export without using `import`. Re-exporting is pretty nasty because you can re-export from multiple files, wildcard re-export, and then import those from a directory if they are in a file called `index.(js|ts|jsx...)`. Unfortunately, I work with code that does this:
+The main challenge is that esmodules allow you to re-export without using `import`. Re-exporting is pretty nasty to deal with because you can re-export from multiple files, wildcard re-export, and then import those from a directory if they are in a file called `index.(js|ts|jsx...)`. Unfortunately, I work with code that does this:
 
 ```js
 // foo.js
