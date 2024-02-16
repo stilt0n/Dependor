@@ -6,14 +6,13 @@ import (
 )
 
 func main() {
-	graph := dependencygraph.NewWithRootPath("./lib/dependencygraph")
-	graph.PrintPaths()
-	walked, err := graph.WalkSync()
+	graph := dependencygraph.NewSync("./lib/dependencygraph")
+	edges, err := graph.ParseGraph()
 	if err != nil {
 		fmt.Printf("Got an error. Error: %s", err)
 		return
 	}
-	printGraph(walked)
+	printGraph(edges)
 }
 
 func printGraph(graph map[string][]string) {

@@ -26,6 +26,7 @@ type Tokenizer struct {
 	reExports    []string
 	exports      []string
 	callDir      string
+	initPath     string
 }
 
 func NewTokenizerFromFile(initPath string) (*Tokenizer, error) {
@@ -34,17 +35,18 @@ func NewTokenizerFromFile(initPath string) (*Tokenizer, error) {
 		return &Tokenizer{}, err
 	}
 	fileString := string(file)
-	return New(fileString, filepath.Dir(initPath)), nil
+	return New(fileString, initPath), nil
 }
 
-func New(fileString, callDir string) *Tokenizer {
+func New(fileString, initPath string) *Tokenizer {
 	t := Tokenizer{
 		currentIndex: 0,
 		fileRunes:    []rune(fileString),
 		imports:      make(map[string][]string, 0),
 		reExports:    []string{},
 		exports:      []string{},
-		callDir:      callDir,
+		callDir:      filepath.Dir(initPath),
+		initPath:     initPath,
 	}
 	return &t
 }
@@ -73,7 +75,7 @@ func (t *Tokenizer) TokenizeImports() FileToken {
 		t.advanceChars()
 	}
 	return FileToken{
-		FilePath:  t.callDir,
+		FilePath:  t.initPath,
 		Imports:   t.imports,
 		ReExports: t.reExports,
 		Exports:   t.exports,
