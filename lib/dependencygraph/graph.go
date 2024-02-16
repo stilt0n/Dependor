@@ -187,14 +187,14 @@ func (graph *DependencyGraph) resolveImportExtensions() {
 	for file, imports := range edges {
 		var updated []string
 		for _, path := range imports {
-			updated = append(updated, withExtension(edges, path))
+			updated = append(updated, withExtension_old(edges, path))
 		}
 		graph.edgeList.Store(file, updated)
 	}
 }
 
-// TODO: handle cases like `import { x } from '.';`
-func withExtension(pathMap map[string][]string, path string) string {
+// Keeping so that I can test the new implementation against the old one
+func withExtension_old(pathMap map[string][]string, path string) string {
 	extensions := []string{
 		".js",
 		".ts",
@@ -208,6 +208,7 @@ func withExtension(pathMap map[string][]string, path string) string {
 
 	for _, extension := range extensions {
 		if _, ok := pathMap[path+extension]; ok {
+			fmt.Println("found a matching extensions!!!")
 			return path + extension
 		}
 	}
