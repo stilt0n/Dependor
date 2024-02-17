@@ -47,7 +47,7 @@ func (graph *SingleThreadedGraph) ParseGraph() (map[string][]string, error) {
 		return nil, err
 	}
 	graph.resolveImportExtensions()
-	graph.createIndexMaps()
+	graph.finishIndexMaps()
 	graph.parseTokens()
 	if graph.edgeList == nil {
 		return nil, errors.New("parse tokens failed with nil edgeList")
@@ -120,6 +120,17 @@ func (graph *SingleThreadedGraph) resolveImportExtensions() {
 		for i, originalPath := range tk.ReExports {
 			tk.ReExports[i] = withExtension(graph.tokens, originalPath)
 		}
+
+		for k, v := range tk.ReExportMap {
+			// We need to know if a file is referenced in a wildcard export in order
+			// to resolve that export. But to check, we will need the file's path to
+			// be discoverable in the re-export map.
+			if v == "*" {
+				tk.ReExportMap[withExtension(graph.tokens, k)] = v
+				continue
+			}
+			tk.ReExportMap[k] = withExtension(graph.tokens, v)
+		}
 	}
 }
 
@@ -135,28 +146,27 @@ func (graph *SingleThreadedGraph) resolveIndexImport(pth string, idents []string
 	return resolvedPaths
 }
 
-func (graph *SingleThreadedGraph) createIndexMaps() {
+func (graph *SingleThreadedGraph) finishIndexMaps() {
 	for _, tk := range graph.tokens {
-		if !isIndexFile(tk.FilePath) {
+		// For now I am not supporting re-exports from non-index files but since
+		// it seems like most of the work for doing this is finished, I may do
+		// so in the future.
+		if tk.ReExportMap == nil || !isIndexFile(tk.FilePath) {
 			continue
 		}
 
-		indexMap := make(map[string]string, 0)
 		for _, reExportPath := range tk.ReExports {
+			if _, ok := tk.ReExportMap[reExportPath]; !ok {
+				continue
+			}
 			reExportFileNode, ok := graph.tokens[reExportPath]
 			if !ok {
 				continue
 			}
 			for _, export := range reExportFileNode.Exports {
-				indexMap[export] = reExportPath
+				tk.ReExportMap[export] = reExportPath
 			}
 		}
-
-		for _, export := range tk.Exports {
-			indexMap[export] = tk.FilePath
-		}
-
-		tk.ReExportMap = indexMap
 	}
 }
 
