@@ -144,8 +144,9 @@ func TestTokenizeExports(t *testing.T) {
 	}
 
 	expectedExports := []string{
+		"x",
 		"five",
-		"foo",
+		"pressF",
 		"bar",
 		"baz",
 		"default",
@@ -188,6 +189,11 @@ func TestReExports(t *testing.T) {
 		"testfiles/nested/test2",
 	}
 
+	expectedReExportMap := map[string]string{
+		"func":                   "testfiles/nested/test",
+		"testfiles/nested/test2": "*",
+	}
+
 	tokenizer, err := NewTokenizerFromFile("./testfiles/nested/index.js")
 	if err != nil {
 		t.Fatalf("Expected successful file read. Got error: %s", err)
@@ -202,6 +208,20 @@ func TestReExports(t *testing.T) {
 	for i, rex := range tokenizedFile.ReExports {
 		if rex != expectedReExports[i] {
 			t.Errorf("Expected re-export at index %d to be %q but received %q", i, expectedReExports[i], rex)
+		}
+	}
+
+	if len(tokenizedFile.ReExportMap) != len(expectedReExportMap) {
+		t.Log(tokenizedFile.ReExportMap)
+		t.Fatalf("Expected %d entries in the re-export map but received %d", len(expectedReExportMap), len(tokenizedFile.ReExportMap))
+	}
+	for k, v := range tokenizedFile.ReExportMap {
+		expectedValue, keyExists := expectedReExportMap[k]
+		if !keyExists {
+			t.Fatalf("Received unexpected key %q from reExportMap", k)
+		}
+		if expectedValue != v {
+			t.Errorf("Received wrong value for key %q. Expected %q received %q", k, expectedValue, v)
 		}
 	}
 }
