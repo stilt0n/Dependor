@@ -274,13 +274,8 @@ func (t *Tokenizer) skipWhitespace() {
 
 func (t *Tokenizer) skipImportComments() {
 	for t.currentIndex < t.end() && t.current() == '/' {
-		if t.peek() == '*' {
-			t.skipMultiLineComment()
-			t.skipWhitespace()
-		} else if t.peek() == '/' {
-			t.skipSingleLineComment()
-			t.skipWhitespace()
-		}
+		t.skipComment(t.peek())
+		t.skipWhitespace()
 	}
 }
 
