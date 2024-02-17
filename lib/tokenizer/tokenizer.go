@@ -6,6 +6,7 @@ I didn't think it would be crazy difficult to write an import lexer so that's wh
 package tokenizer
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
@@ -24,6 +25,7 @@ type Tokenizer struct {
 	fileRunes    []rune
 	imports      map[string][]string
 	reExports    []string
+	reExportMap  map[string]string
 	exports      []string
 	callDir      string
 	initPath     string
@@ -44,6 +46,7 @@ func New(fileString, initPath string) *Tokenizer {
 		fileRunes:    []rune(fileString),
 		imports:      make(map[string][]string, 0),
 		reExports:    []string{},
+		reExportMap:  nil,
 		exports:      []string{},
 		callDir:      filepath.Dir(initPath),
 		initPath:     initPath,
@@ -75,10 +78,11 @@ func (t *Tokenizer) TokenizeImports() FileToken {
 		t.advanceChars()
 	}
 	return FileToken{
-		FilePath:  t.initPath,
-		Imports:   t.imports,
-		ReExports: t.reExports,
-		Exports:   t.exports,
+		FilePath:    t.initPath,
+		Imports:     t.imports,
+		ReExports:   t.reExports,
+		ReExportMap: t.reExportMap,
+		Exports:     t.exports,
 	}
 }
 
@@ -192,7 +196,6 @@ func (t *Tokenizer) tokenizeExport() {
 		t.exports = append(t.exports, identifiers...)
 		return
 	}
-
 	// TODO: This is used multiple times and could probably be abstracted to a `findQuote` function
 	// in this case we are dealing with a re-export so we need to find the next string literal
 	for current := t.current(); t.currentIndex < t.end() && !isQuote(current); current = t.current() {
@@ -212,8 +215,23 @@ func (t *Tokenizer) tokenizeExport() {
 	}
 
 	t.reExports = append(t.reExports, reExportPath)
+	if len(identifiers) == 0 {
+		fmt.Printf("WARN: file %q has no reExported identifiers but contained a reExport. This is either a syntax error, or a bug in the tokenizer.\n", t.initPath)
+		return
+	}
+
+	if t.reExportMap == nil {
+		t.reExportMap = make(map[string]string, len(identifiers))
+	}
 	// populate reExportMap with idents. If an ident is "*"
 	// save reExport path in map so that it can be populated in the parser
+	for _, ident := range identifiers {
+		if ident == "*" {
+			t.reExportMap[reExportPath] = "*"
+			continue
+		}
+		t.reExportMap[ident] = reExportPath
+	}
 }
 
 func (t *Tokenizer) readImportString() (string, bool) {
@@ -334,9 +352,14 @@ func (t *Tokenizer) tokenizeExportIdentifiers() ([]string, bool) {
 			case "as":
 				overwriteLastExport = true
 			case "from":
-				return []string{}, false
+				return identifiers, false
 			case "default":
-				return []string{"default"}, !haveSeenLeftBrace
+				if !haveSeenLeftBrace {
+					return []string{"default"}, true
+				}
+				// in this case we are in a re-export
+				identifiers = addExportIdentifier(identifiers, ident, overwriteLastExport)
+				overwriteLastExport = false
 			default:
 				if !slices.Contains(keywords, ident) && len(ident) > 0 {
 					identifiers = addExportIdentifier(identifiers, ident, overwriteLastExport)
