@@ -98,7 +98,7 @@ func (graph *SingleThreadedGraph) readImports(filePath string) {
 	if err != nil {
 		return
 	}
-	tokenizedFile := tk.TokenizeImports()
+	tokenizedFile := tk.Tokenize()
 	graph.tokens[tokenizedFile.FilePath] = &tokenizedFile
 }
 

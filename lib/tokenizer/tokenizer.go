@@ -58,7 +58,7 @@ func New(fileString, initPath string) *Tokenizer {
 // e.g. nested requires `require(require('./pathToRealImport'))`
 // Supporting this case seems challenging and I don't think it's currently worth my effort
 // Reads all import paths from a file in one pass and returns them in an array
-func (t *Tokenizer) TokenizeImports() FileToken {
+func (t *Tokenizer) Tokenize() FileToken {
 	if len(t.fileRunes) < 1 {
 		return FileToken{}
 	}
