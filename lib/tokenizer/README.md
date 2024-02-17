@@ -73,13 +73,45 @@ export { foo, bar, baz } from "./foo";
 
 Here, we need to make sure we don't treat the re-exports as exports since they are just being forwarded from another file. When we run into the `from` token, then the exported identifiers should be ignored and the following path should be saved to `reExports`.
 
+Finally, exports can also have aliases, which need to be treated differently from import alaises. For an import, we should skip the alias to allow for correct mapping between files. But for exports, we need to use the alias and skip the unaliased identifier. To do this, we can simply use the `as` token as a flag to overwrite the previous index in the `exports` array.
+
 ### Re-exports
 
 Since these are always preceded by the `export` token, we can handle them in the same method that handles exports. If we run into the `from` token, then we will search for the next string and use that as the re-export path.
 
 #### Re-export identifiers
 
-We could potentially store these in the future, but for now I am choosing to treat all `export ... from 'file';` statements as if they were `export * from 'file';`. Since files track their own exports, storing a file path is sufficient to find the related exports. Since I don't currently need anything more granular than which files import from which other files I have decided it is not worth storing this information two places.
+Re-export identifiers will eventually need to be stored to help connect importing files to the correct exporting files. Some of this can be taken care of in the tokenizer. In casese like this:
+
+```js
+export { default as foo, bar, baz } from "./foo";
+```
+
+We can just add the identifiers to the file token's reExportMap:
+
+```go
+{
+  "foo": "./foo",
+  "bar": "./foo",
+  "baz": "./foo",
+}
+```
+
+But for wildcard re-exports we won't be able to update the map until after tokenization is finished. (It is technically possibly but would involve unnecessary file i/o). In this case, to make the graph parser aware of the need to update the map the file path will be stored as a key with an asterisk as the value:
+
+i.e.
+
+```js
+export * from "./foo";
+```
+
+results in:
+
+```go
+{
+  "./foo": "*",
+}
+```
 
 ## Why a tokenizer?
 
