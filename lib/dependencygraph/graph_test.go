@@ -7,19 +7,23 @@ import (
 
 func TestParse(t *testing.T) {
 	expected_tree := map[string][]string{
-		"test_tree/a.js":                                              {"foo"},
+		"test_tree/a.js":                                              {"foo", "test_tree/re-exports/rexc.js", "test_tree/re-exports/rexb.js"},
 		"test_tree/b.ts":                                              {"foo"},
 		"test_tree/util/c.js":                                         {"lodash", "express", "test_tree/b.ts", "test_tree/util/fake_url/printFunc"},
 		"test_tree/src/components/d.jsx":                              {"react", "@remix-run/react", "test_tree/src/components/i/i.jsx"},
 		"test_tree/src/components/e.tsx":                              {},
 		"test_tree/src/components/i/i.jsx":                            {},
-		"test_tree/src/components/i/not_imported.ts":                  {},
+		"test_tree/src/components/i/not_imported.ts":                  {"test_tree/re-exports/rexa.js", "test_tree/re-exports/rexb.js"},
 		"test_tree/src/components/i/annoying.jsx":                     {"test_tree/src/components/i/i.jsx"},
 		"test_tree/src/components/i/folder/importFromParentFolder.ts": {"test_tree/src/components/i/i.jsx"},
 		"test_tree/src/components/i/index.js":                         {},
 		"test_tree/src/components/f.tsx":                              {"react", "dynamic_data"},
 		"test_tree/src/hooks/g.ts":                                    {},
 		"test_tree/src/hooks/h.ts":                                    {"test_tree/src/hooks/g.ts", "test_tree/a.js", "test_tree/src/hooks/spurious_imports.txt"},
+		"test_tree/re-exports/index.js":                               {},
+		"test_tree/re-exports/rexa.js":                                {},
+		"test_tree/re-exports/rexb.js":                                {},
+		"test_tree/re-exports/rexc.js":                                {},
 	}
 
 	dgraph := NewSync()
@@ -37,6 +41,7 @@ func TestParse(t *testing.T) {
 		}
 
 		if len(expected) != len(v) {
+			t.Log(v)
 			t.Fatalf("Wrong number of items in adjaceny list for %q. Got %d. Expected %d\n", k, len(v), len(expected))
 		}
 
