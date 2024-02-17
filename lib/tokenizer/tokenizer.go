@@ -212,6 +212,8 @@ func (t *Tokenizer) tokenizeExport() {
 	}
 
 	t.reExports = append(t.reExports, reExportPath)
+	// populate reExportMap with idents. If an ident is "*"
+	// save reExport path in map so that it can be populated in the parser
 }
 
 func (t *Tokenizer) readImportString() (string, bool) {
@@ -320,7 +322,8 @@ func (t *Tokenizer) tokenizeExportIdentifiers() ([]string, bool) {
 	// When `default`` is inside of curly braces it means we are re-exporting
 	// in this case we need to return false
 	haveSeenLeftBrace := false
-
+	// For mapping to work correctly we need to overwrite aliased exports with their alias
+	overwriteLastExport := false
 	for t.currentIndex < t.end() && !slices.Contains(endChars, t.current()) {
 		if current := t.current(); slices.Contains(stopChars, current) || unicode.IsSpace(current) {
 			if current == '{' {
@@ -329,14 +332,15 @@ func (t *Tokenizer) tokenizeExportIdentifiers() ([]string, bool) {
 			ident := string(currentIdentifier)
 			switch ident {
 			case "as":
-				t.skipNextIdentifier()
+				overwriteLastExport = true
 			case "from":
 				return []string{}, false
 			case "default":
 				return []string{"default"}, !haveSeenLeftBrace
 			default:
 				if !slices.Contains(keywords, ident) && len(ident) > 0 {
-					identifiers = append(identifiers, ident)
+					identifiers = addExportIdentifier(identifiers, ident, overwriteLastExport)
+					overwriteLastExport = false
 				}
 			}
 
@@ -422,4 +426,17 @@ func isQuote(c rune) bool {
 
 func isRelativePath(path string) bool {
 	return strings.HasPrefix(path, ".")
+}
+
+// Performance note (because I'm bad at Go): Slices are passed by value but a slice is
+// simply a header that gives information about an underlying array (e.g. pointer to array
+// plus start and stop indices). So reassigning a slice is not nearly as expensive as
+// copying and reassigning an array in languages like JavaScript
+func addExportIdentifier(identifiers []string, ident string, overwrite bool) []string {
+	if overwrite {
+		identifiers[len(identifiers)-1] = ident
+	} else {
+		identifiers = append(identifiers, ident)
+	}
+	return identifiers
 }
