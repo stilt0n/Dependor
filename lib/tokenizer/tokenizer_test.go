@@ -144,8 +144,8 @@ func TestImportTypes(t *testing.T) {
 	}
 
 	expected := map[string][]string{
-		"example":    {"default", "example"},
-		"@types/foo": {"FooType"},
+		"example":  {"default", "example"},
+		"@Foo/foo": {"FooType", "Foo"},
 	}
 
 	tokenizedFile := tokenizer.Tokenize()
