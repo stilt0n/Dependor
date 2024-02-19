@@ -108,7 +108,7 @@ func (graph *SingleThreadedGraph) resolveImportExtensions() {
 	for _, tk := range graph.tokens {
 		updatedImports := make(map[string][]string, 0)
 		for originalPath, idents := range tk.Imports {
-			updatedPath := withExtension(graph.tokens, originalPath)
+			updatedPath := withExtension(graph.tokens, graph.config, originalPath)
 			updatedImports[updatedPath] = idents
 		}
 		tk.Imports = updatedImports
@@ -120,7 +120,7 @@ func (graph *SingleThreadedGraph) resolveImportExtensions() {
 		// ReExports aren't needed for withExtension to work so they
 		// can be safely overwritten in-place
 		for i, originalPath := range tk.ReExports {
-			tk.ReExports[i] = withExtension(graph.tokens, originalPath)
+			tk.ReExports[i] = withExtension(graph.tokens, graph.config, originalPath)
 		}
 
 		for k, v := range tk.ReExportMap {
@@ -128,10 +128,10 @@ func (graph *SingleThreadedGraph) resolveImportExtensions() {
 			// to resolve that export. But to check, we will need the file's path to
 			// be discoverable in the re-export map.
 			if v == "*" {
-				tk.ReExportMap[withExtension(graph.tokens, k)] = v
+				tk.ReExportMap[withExtension(graph.tokens, graph.config, k)] = v
 				continue
 			}
-			tk.ReExportMap[k] = withExtension(graph.tokens, v)
+			tk.ReExportMap[k] = withExtension(graph.tokens, graph.config, v)
 		}
 	}
 }
@@ -176,7 +176,13 @@ func (graph *SingleThreadedGraph) finishIndexMaps() {
 	}
 }
 
-func withExtension(pathMap map[string]*tokenizer.FileToken, path string) string {
+func (graph *SingleThreadedGraph) resolvePathAliases(path string) string {
+	return graph.config.ReplaceAliases(path)
+}
+
+// Resolves any aliases and finds the correct file extension for a path
+func withExtension(pathMap map[string]*tokenizer.FileToken, cfg *config.Config, path string) string {
+	path = cfg.ReplaceAliases(path)
 	extensions := []string{
 		".js",
 		".ts",

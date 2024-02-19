@@ -61,6 +61,8 @@ import { foo } from "./foo";
 
 File extensions are not dealt with in the tokenizer because doing it there would require extra file i/o which is expensive. Since each file path is already stored with its import/export info, we have effectively already cached the relevant parts of the file system when we tokenized it. So to figure out the extension of an extensionless import we just need to check if `extensionlessImport + extension` exists in the token map. If it does, then the path will be resolved to use that extension. For imports such as named imports (e.g. `import React from 'react';`) no extension will be added.
 
+Import aliases are also handled here. These could potentially be handled in the tokenizer in the future, but were more convenient to handle at parse time with how things are currently structured.
+
 #### Finish Index Maps
 
 ES Imports have a cool, but challenging to parse feature, you can import from a directory that has an `index.js` file in it:

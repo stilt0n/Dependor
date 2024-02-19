@@ -1,3 +1,6 @@
 {
-  "ignorePatterns": ["**/node_modules"]
+  "ignorePatterns": ["**/node_modules"],
+  "pathAliases": {
+    "~": "test_tree"
+  }
 }
