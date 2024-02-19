@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 )
 
 type SingleThreadedGraph struct {
@@ -137,6 +138,10 @@ func (graph *SingleThreadedGraph) resolveImportExtensions() {
 func (graph *SingleThreadedGraph) resolveIndexImport(pth string, idents []string) []string {
 	resolvedPaths := make([]string, 0)
 	for _, ident := range idents {
+		if slices.Contains(graph.tokens[pth].Exports, ident) {
+			resolvedPaths = append(resolvedPaths, pth)
+			continue
+		}
 		resolved, ok := graph.tokens[pth].ReExportMap[ident]
 		if !ok {
 			continue
