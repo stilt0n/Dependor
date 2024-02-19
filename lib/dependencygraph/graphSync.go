@@ -176,10 +176,6 @@ func (graph *SingleThreadedGraph) finishIndexMaps() {
 	}
 }
 
-func (graph *SingleThreadedGraph) resolvePathAliases(path string) string {
-	return graph.config.ReplaceAliases(path)
-}
-
 // Resolves any aliases and finds the correct file extension for a path
 func withExtension(pathMap map[string]*tokenizer.FileToken, cfg *config.Config, path string) string {
 	path = cfg.ReplaceAliases(path)
