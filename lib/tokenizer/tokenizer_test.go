@@ -137,8 +137,24 @@ func TestTokenizeIdentifiers(t *testing.T) {
 	}
 }
 
+func TestImportTypes(t *testing.T) {
+	tokenizer, err := NewTokenizerFromFile("./testfiles/nested/test2.ts")
+	if err != nil {
+		t.Fatalf("Expected successful file read. Got error: %s", err)
+	}
+
+	expected := map[string][]string{
+		"example":    {"default", "example"},
+		"@types/foo": {"FooType"},
+	}
+
+	tokenizedFile := tokenizer.Tokenize()
+
+	testEdgeList(t, tokenizedFile.Imports, expected)
+}
+
 func TestTokenizeExports(t *testing.T) {
-	tokenizer, err := NewTokenizerFromFile("./testfiles/nested/test2.js")
+	tokenizer, err := NewTokenizerFromFile("./testfiles/nested/test2.ts")
 	if err != nil {
 		t.Fatalf("Expected successful file read. Got error: %s", err)
 	}
@@ -149,28 +165,12 @@ func TestTokenizeExports(t *testing.T) {
 		"pressF",
 		"bar",
 		"baz",
+		"Noop",
+		"IStuff",
 		"default",
 	}
 
-	expectedImportIdents := []string{"default", "example"}
-
 	tokenizedFile := tokenizer.Tokenize()
-
-	if len(tokenizedFile.Imports) != 1 {
-		t.Fatalf("Wrong length for imports. Expected 1 received %d", len(tokenizedFile.Imports))
-	}
-
-	exampleIdents, ok := tokenizedFile.Imports["example"]
-
-	if !ok {
-		t.Fatal("Expected \"example\" to be in import paths")
-	}
-
-	for i, ident := range exampleIdents {
-		if ident != expectedImportIdents[i] {
-			t.Errorf("Wrong import for index %d. Expected %q received %q", i, expectedImportIdents[i], ident)
-		}
-	}
 
 	if len(tokenizedFile.Exports) != len(expectedExports) {
 		t.Fatalf("Expected exports length to be %d but received length %d", len(expectedExports), len(tokenizedFile.Exports))
@@ -222,6 +222,32 @@ func TestReExports(t *testing.T) {
 		}
 		if expectedValue != v {
 			t.Errorf("Received wrong value for key %q. Expected %q received %q", k, expectedValue, v)
+		}
+	}
+}
+
+func testEdgeList(t *testing.T, edgeList, expected map[string][]string) {
+	if len(edgeList) != len(expected) {
+		t.Errorf("Expected edge list to have length %d but receive %d", len(expected), len(edgeList))
+		return
+	}
+
+	for node, edges := range edgeList {
+		expectedEdges, ok := expected[node]
+		if !ok {
+			t.Errorf("Unexpected node %q in edge list", node)
+			continue
+		}
+
+		if len(expectedEdges) != len(edges) {
+			t.Errorf("Expected node %q to have %d edges but received %d", node, len(expectedEdges), len(edges))
+			continue
+		}
+
+		for i, e := range edges {
+			if e != expectedEdges[i] {
+				t.Errorf("Expected edge at index %d to be %q but received %q instead.", i, expectedEdges[i], e)
+			}
 		}
 	}
 }
