@@ -1,7 +1,9 @@
 // @ts-ignore
 import defaultExample, { example } from "example";
 // @ts-ignore
-import type { FooType } from "@types/foo";
+import type { FooType } from "@Foo/foo";
+// @ts-ignore
+import { Foo } from "@Foo/foo";
 
 const foo = "foo";
 const bar = "bar";

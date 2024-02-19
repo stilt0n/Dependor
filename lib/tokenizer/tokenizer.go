@@ -138,6 +138,11 @@ func (t *Tokenizer) tokenizeImport() {
 		return
 	}
 
+	if _, exists := t.imports[importPath]; exists {
+		t.imports[importPath] = append(t.imports[importPath], identifiers...)
+		return
+	}
+
 	t.imports[importPath] = identifiers
 }
 
