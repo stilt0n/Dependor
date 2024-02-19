@@ -137,7 +137,7 @@ func (graph *SingleThreadedGraph) resolveImportExtensions() {
 }
 
 func (graph *SingleThreadedGraph) resolveIndexImport(pth string, idents []string) []string {
-	resolvedPaths := make(utils.Set, 0)
+	resolvedPaths := make(utils.Set[string], 0)
 	for _, ident := range idents {
 		if slices.Contains(graph.tokens[pth].Exports, ident) {
 			resolvedPaths.Add(pth)
