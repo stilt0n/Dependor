@@ -288,11 +288,14 @@ func (t *Tokenizer) tokenizeImportIdentifiers() []string {
 	for t.currentIndex < t.end() && !slices.Contains(endChars, t.current()) {
 		if current := t.current(); slices.Contains(stopChars, current) || unicode.IsSpace(current) {
 			ident := string(currentIdentifier)
-			if ident == "as" {
+			switch {
+			case ident == "as":
 				t.skipNextIdentifier()
-			} else if ident == "from" {
+			case ident == "from":
 				break
-			} else if len(ident) > 0 {
+			case ident == "type":
+				// ignore `type` since it can be used as annotation `import type { FooType } ...`
+			case len(ident) > 0:
 				if isDefault {
 					identifiers = append(identifiers, "default")
 				} else {
@@ -326,7 +329,7 @@ func (t *Tokenizer) tokenizeImportIdentifiers() []string {
 // returns false when 'from' token is encountered
 func (t *Tokenizer) tokenizeExportIdentifiers() ([]string, bool) {
 	// TODO: recreating and garbage collecting this on each function call is probably bad for performance
-	keywords := []string{"const", "let", "var", "function"}
+	keywords := []string{"const", "let", "var", "function", "interface", "type"}
 	stopChars := []rune{',', '{', '}', '/'}
 	endChars := []rune{'=', ';'}
 
@@ -355,6 +358,9 @@ func (t *Tokenizer) tokenizeExportIdentifiers() ([]string, bool) {
 				// in this case we are in a re-export
 				identifiers = addExportIdentifier(identifiers, ident, overwriteLastExport)
 				overwriteLastExport = false
+			case "interface":
+				// interfaces are of form export interface ident { //... }
+				endChars = append(endChars, '{')
 			default:
 				if !slices.Contains(keywords, ident) && len(ident) > 0 {
 					identifiers = addExportIdentifier(identifiers, ident, overwriteLastExport)

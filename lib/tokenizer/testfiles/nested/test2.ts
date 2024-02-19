@@ -1,4 +1,7 @@
+// @ts-ignore
 import defaultExample, { example } from "example";
+// @ts-ignore
+import type { FooType } from "@types/foo";
 
 const foo = "foo";
 const bar = "bar";
@@ -7,4 +10,10 @@ export const x = "x";
 
 export const five = 5;
 export { foo as pressF, bar, aliased as baz };
+export type Noop = () => void;
+export interface IStuff {
+  thing: object;
+  item: object;
+}
+
 export default function noop() {}
