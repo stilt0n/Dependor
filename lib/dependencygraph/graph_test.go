@@ -16,6 +16,7 @@ func TestParse(t *testing.T) {
 		"test_tree/src/components/i/not_imported.ts":                  {"test_tree/re-exports/rexa.js", "test_tree/re-exports/rexb.js"},
 		"test_tree/src/components/i/annoying.jsx":                     {"test_tree/src/components/i/i.jsx"},
 		"test_tree/src/components/i/folder/importFromParentFolder.ts": {"test_tree/src/components/i/i.jsx"},
+		"test_tree/src/components/sibling/importFromSibling.js":       {"test_tree/src/components/i/index.js"},
 		"test_tree/src/components/i/index.js":                         {},
 		"test_tree/src/components/f.tsx":                              {"react", "dynamic_data"},
 		"test_tree/src/hooks/g.ts":                                    {},
