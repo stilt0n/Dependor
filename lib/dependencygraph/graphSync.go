@@ -3,6 +3,7 @@ package dependencygraph
 import (
 	"dependor/lib/config"
 	"dependor/lib/tokenizer"
+	"dependor/lib/utils"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -136,19 +137,19 @@ func (graph *SingleThreadedGraph) resolveImportExtensions() {
 }
 
 func (graph *SingleThreadedGraph) resolveIndexImport(pth string, idents []string) []string {
-	resolvedPaths := make([]string, 0)
+	resolvedPaths := make(utils.Set, 0)
 	for _, ident := range idents {
 		if slices.Contains(graph.tokens[pth].Exports, ident) {
-			resolvedPaths = append(resolvedPaths, pth)
+			resolvedPaths.Add(pth)
 			continue
 		}
 		resolved, ok := graph.tokens[pth].ReExportMap[ident]
 		if !ok {
 			continue
 		}
-		resolvedPaths = append(resolvedPaths, resolved)
+		resolvedPaths.Add(resolved)
 	}
-	return resolvedPaths
+	return resolvedPaths.Keys()
 }
 
 func (graph *SingleThreadedGraph) finishIndexMaps() {
