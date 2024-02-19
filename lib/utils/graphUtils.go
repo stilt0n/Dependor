@@ -1,5 +1,18 @@
 package utils
 
+import (
+	"encoding/json"
+	"os"
+)
+
+func WriteGraph(graph map[string][]string) {
+	asJson, err := json.Marshal(graph)
+	if err != nil {
+		panic(err)
+	}
+	os.WriteFile("dependor-output.json", asJson, 0666)
+}
+
 func ReverseEdges(graph map[string][]string) map[string][]string {
 	reversed := make(map[string][]string, 0)
 	for node, edges := range graph {

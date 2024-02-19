@@ -2,6 +2,7 @@ package main
 
 import (
 	"dependor/lib/dependencygraph"
+	"dependor/lib/utils"
 	"fmt"
 )
 
@@ -13,6 +14,7 @@ func main() {
 		return
 	}
 	printGraph(edges)
+	utils.WriteGraph(edges)
 }
 
 func printGraph(graph map[string][]string) {
