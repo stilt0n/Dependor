@@ -10,7 +10,7 @@ func TestParse(t *testing.T) {
 		"test_tree/a.js":                                              {"foo", "test_tree/re-exports/rexc.js", "test_tree/re-exports/rexb.js"},
 		"test_tree/b.ts":                                              {"foo"},
 		"test_tree/util/c.js":                                         {"lodash", "express", "test_tree/b.ts", "test_tree/util/fake_url/printFunc"},
-		"test_tree/src/components/d.jsx":                              {"react", "@remix-run/react", "test_tree/src/components/i/i.jsx"},
+		"test_tree/src/components/d.jsx":                              {"react", "@remix-run/react", "test_tree/src/components/i/i.jsx", "test_tree/a.js"},
 		"test_tree/src/components/e.tsx":                              {},
 		"test_tree/src/components/i/i.jsx":                            {},
 		"test_tree/src/components/i/not_imported.ts":                  {"test_tree/re-exports/rexa.js", "test_tree/re-exports/rexb.js"},

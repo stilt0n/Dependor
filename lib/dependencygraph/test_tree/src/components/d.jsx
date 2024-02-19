@@ -5,6 +5,7 @@ import {
   useSearchParams,
 } from '@remix-run/react';
 import { IComponent } from './i';
+import foo from '~/a';
 
 export const Component = () => (
   <Import>
