@@ -18,6 +18,13 @@ type Config struct {
 	IgnorePatterns []string `json:"ignorePatterns"`
 	// This allows you to resolve paths like `'~/components/Foo'` or `'@monorepo/package/dir/file'`
 	PathAliases map[string]string `json:"pathAliases"`
+	// This allows tooling that uses dependor for depency parsing and then uses
+	// the parsed graph for something else to make use of dependor's config
+	// rather than needing to introduce a new config file. This might not always
+	// be the best choice, but in some cases it might be helpful. I am personally
+	// wanting to build a suite of tools on top of dependor and it would be nice
+	// to house those in separate repos without requiring new apis for all of them
+	CustomConfig map[string]any `json:"-"`
 }
 
 func ReadConfig(path ...string) (*Config, error) {
@@ -46,11 +53,16 @@ func ReadConfig(path ...string) (*Config, error) {
 		return defaultConfig, err
 	}
 	var config Config
-	err = json.Unmarshal(bytes, &config)
-	if err != nil {
-		fmt.Printf("WARN: received an error while parsing defendor.json. Using default config as a fallback. See error below for more details:\n%s\n", err)
-		return defaultConfig, err
+	if err := json.Unmarshal(bytes, &config); err != nil {
+		panic(fmt.Sprintf("Error parsing JSON in dependor.json: %s", err))
 	}
+
+	// Unmarshals unknown fields into CustomConfig
+	if err := json.Unmarshal(bytes, &config.CustomConfig); err != nil {
+		panic(fmt.Sprintf("Error parsing JSON in dependor.json: %s", err))
+	}
+	delete(config.CustomConfig, "ignorePatterns")
+	delete(config.CustomConfig, "pathAliases")
 
 	return &config, nil
 }
@@ -78,4 +90,14 @@ func (cfg *Config) ReplaceAliases(path string) string {
 		}
 	}
 	return path
+}
+
+// Returns an array of bytes than can be unmarshalled into the expected json type
+func (cfg *Config) GetCustomConfig() ([]byte, error) {
+	jsonBytes, err := json.Marshal(cfg.CustomConfig)
+	fmt.Printf("%+v\n", cfg.CustomConfig)
+	if err != nil {
+		return nil, err
+	}
+	return jsonBytes, nil
 }

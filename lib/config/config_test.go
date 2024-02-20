@@ -1,6 +1,9 @@
 package config
 
-import "testing"
+import (
+	"encoding/json"
+	"testing"
+)
 
 func TestReadConfig(t *testing.T) {
 	cfg, err := ReadConfig()
@@ -19,11 +22,32 @@ func TestReadConfig(t *testing.T) {
 	}
 
 	if success := testSliceMatch(t, cfg.IgnorePatterns, expectedIgnorePatterns); !success {
-		t.Error("received at least one incorrect ignore pattern")
+		t.Error("received at least one incorrect ignore pattern\n")
 	}
 
 	if success := testMapMatch(t, cfg.PathAliases, expectedAliases); !success {
-		t.Error("received at least on incorrect path alias")
+		t.Error("received at least on incorrect path alias\n")
+	}
+
+	type Custom struct {
+		FindRelatedTestsOptions struct {
+			TestPattern string `json:"testPattern"`
+		} `json:"findRelatedTestsOptions"`
+	}
+	var options Custom
+
+	jsonBytes, err := cfg.GetCustomConfig()
+	if err != nil {
+		t.Fatalf("Expected no error when marshaling CustomConfig into JSON. Received: %s\n", err)
+	}
+
+	if err := json.Unmarshal(jsonBytes, &options); err != nil {
+		t.Fatalf("Expected no error when unmarshaling CustomConfig JSON. Received: %s\n", err)
+	}
+
+	expected := "(.spec.|.test.)(js|jsx|ts|tsx)$"
+	if res := options.FindRelatedTestsOptions.TestPattern; res != expected {
+		t.Fatalf("Expected test pattern to be %q but received %q\n", expected, options.FindRelatedTestsOptions.TestPattern)
 	}
 }
 

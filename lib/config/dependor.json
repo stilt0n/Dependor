@@ -3,5 +3,8 @@
   "pathAliases": {
     "@monorepo/package": "root/package",
     "~": "root/home"
+  },
+  "findRelatedTestsOptions": {
+    "testPattern": "(.spec.|.test.)(js|jsx|ts|tsx)$"
   }
 }

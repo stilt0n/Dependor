@@ -57,6 +57,10 @@ func (graph *SingleThreadedGraph) ParseGraph() (map[string][]string, error) {
 	return graph.edgeList, nil
 }
 
+func (graph *SingleThreadedGraph) GetCustomConfig() ([]byte, error) {
+	return graph.config.GetCustomConfig()
+}
+
 // Walks file tree from root path and populates tokenizedFiles
 func (graph *SingleThreadedGraph) walk() error {
 	searchableExtensions := regexp.MustCompile(`(\.js|\.jsx|\.ts|\.tsx)$`)
