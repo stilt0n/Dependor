@@ -1,9 +1,6 @@
 package dependencygraph
 
 import (
-	"dependor/lib/config"
-	"dependor/lib/tokenizer"
-	"dependor/lib/utils"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -11,6 +8,10 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+
+	"github.com/stilt0n/dependor/lib/config"
+	"github.com/stilt0n/dependor/lib/tokenizer"
+	"github.com/stilt0n/dependor/lib/utils"
 )
 
 type SingleThreadedGraph struct {

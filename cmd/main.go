@@ -1,9 +1,10 @@
 package main
 
 import (
-	"dependor/lib/dependencygraph"
-	"dependor/lib/utils"
 	"fmt"
+
+	"github.com/stilt0n/dependor/lib/dependencygraph"
+	"github.com/stilt0n/dependor/lib/utils"
 )
 
 func main() {

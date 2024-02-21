@@ -1,4 +1,4 @@
-module dependor
+module github.com/stilt0n/dependor
 
 go 1.21.5
 
