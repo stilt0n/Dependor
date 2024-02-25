@@ -95,7 +95,6 @@ func (cfg *Config) ReplaceAliases(path string) string {
 // Returns an array of bytes than can be unmarshalled into the expected json type
 func (cfg *Config) GetCustomConfig() ([]byte, error) {
 	jsonBytes, err := json.Marshal(cfg.CustomConfig)
-	fmt.Printf("%+v\n", cfg.CustomConfig)
 	if err != nil {
 		return nil, err
 	}
