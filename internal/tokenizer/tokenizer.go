@@ -336,7 +336,7 @@ func (t *Tokenizer) tokenizeExportIdentifiers() ([]string, bool) {
 	// TODO: recreating and garbage collecting this on each function call is probably bad for performance
 	keywords := []string{"const", "let", "var", "function", "interface", "type"}
 	stopChars := []rune{',', '{', '}', '/'}
-	endChars := []rune{'=', ';'}
+	endChars := []rune{'=', ';', '('}
 
 	var currentIdentifier []rune
 	var identifiers []string
@@ -462,7 +462,7 @@ func isRelativePath(path string) bool {
 // plus start and stop indices). So reassigning a slice is not nearly as expensive as
 // copying and reassigning an array in languages like JavaScript
 func addExportIdentifier(identifiers []string, ident string, overwrite bool) []string {
-	if overwrite {
+	if overwrite && len(identifiers) > 0 {
 		identifiers[len(identifiers)-1] = ident
 	} else {
 		identifiers = append(identifiers, ident)

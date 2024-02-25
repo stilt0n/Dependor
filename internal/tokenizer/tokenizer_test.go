@@ -161,6 +161,8 @@ func TestTokenizeExports(t *testing.T) {
 
 	expectedExports := []string{
 		"x",
+		"fun",
+		"funner",
 		"five",
 		"pressF",
 		"bar",

@@ -9,7 +9,13 @@ const foo = "foo";
 const bar = "bar";
 const aliased = "baz";
 export const x = "x";
-
+export function fun() {
+  return "fun!";
+}
+// prettier-ignore
+export function funner () {
+  return "cool space!";
+}
 export const five = 5;
 export { foo as pressF, bar, aliased as baz };
 export type Noop = () => void;
