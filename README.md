@@ -37,7 +37,7 @@ The `dependor.json` looks like this:
 
 ```json
 {
-  "ignorePatterns": ["**/node_modules", "**/dist", "**build"],
+  "ignorePatterns": ["**/node_modules", "**/dist", "**/build"],
   "pathAliases": { "~": "app" }
 }
 ```
@@ -64,12 +64,14 @@ for file, imports := range graph {
 #### `NewSync`
 
 Constructor for `SingleThreadedGraph`
+
 **Arguments:**
 `rootPath string (optional)`:
 
 - An optional argument to tell dependor which directory to parse. If omitted dependor will parse the directory it is called from.
 
 **Returns:**
+
 `*SingleThreadedGraph`:
 
 - A pointer to a `SingleThreadedGraph` struct
@@ -103,6 +105,7 @@ map[string][]string {
 ```
 
 **Arguments:**
+
 None
 
 **Returns:**
@@ -134,6 +137,7 @@ for file, imports := range graph {
 Retrieves custom config values from `dependor.json`. Dependor is intended to be used in other tooling and in some cases it may be useful for that tooling to piggyback on the `dependor.json` config file rather than requiring an additional config file. Dependor will parse arbitrary config values and can return values it does not make use of for other tooling to use.
 
 **Arguments:**
+
 None
 
 **Returns:**
@@ -183,6 +187,7 @@ dependencyGraph["foo.js"] = []string{"bar.js", "baz.js"}
 Writes the dependency graph to a JSON file.
 
 **Arguments:**
+
 `fileName string (optional)`:
 
 - The name of the file to write to.
@@ -190,6 +195,7 @@ Writes the dependency graph to a JSON file.
 - Panics if it fails to marshalling json or write the file
 
 **Returns:**
+
 void
 
 #### `WriteToJSONString`
@@ -197,9 +203,11 @@ void
 Writes the dependency graph to a JSON string.
 
 **Arguments:**
+
 None
 
 **Returns:**
+
 `(string, error)`
 
 - stringified JSON representation of the graph
@@ -228,9 +236,11 @@ reversed := example.ReverseEdges()
 This can be useful if you need to figure out where a certain file is imported. _Does not modify original graph_.
 
 **Arguments:**
+
 None
 
 **Returns:**
+
 `DependencyGraph`
 
 - A dependency graph with edges in reverse direction of the calling graph
@@ -245,6 +255,7 @@ Performs a breadth-first traversal of the dependency graph starting from a given
 - `fn func(node string)` a function to call on each visited node
 
 **Returns:**
+
 void
 
 **Example:**
