@@ -1,11 +1,11 @@
-package utils
+package dependor
 
 import "testing"
 
 func TestReverseEdges(t *testing.T) {
-	testGraph := map[string][]string{"goose": {"wild", "chase"}}
-	expected := map[string][]string{"wild": {"goose"}, "chase": {"goose"}}
-	reversed := ReverseEdges(testGraph)
+	testGraph := DependencyGraph{"goose": {"wild", "chase"}}
+	expected := DependencyGraph{"wild": {"goose"}, "chase": {"goose"}}
+	reversed := testGraph.ReverseEdges()
 	if len(expected) != len(reversed) {
 		t.Fatalf("Expected revesed length to be %d but received %d\n", len(expected), len(reversed))
 	}
@@ -26,13 +26,16 @@ func TestReverseEdges(t *testing.T) {
 	}
 }
 
-func TestTraverseFn(t *testing.T) {
-	testGraph := map[string][]string{"wild": {"goose"}, "goose": {"chase"}, "chase": {}, "notRelated": {}}
+func TestTraverse(t *testing.T) {
+	testGraph := DependencyGraph{"wild": {"goose"}, "goose": {"chase"}, "chase": {}, "notRelated": {}}
 	var appendTo []string
-	TraverseFn(testGraph, "goose", func(node string) {
+	testGraph.Traverse("wild", func(node string) {
 		appendTo = append(appendTo, node)
 	})
 	expected := []string{"wild", "goose", "chase"}
+	if len(appendTo) != len(expected) {
+		t.Fatalf("Expected slice of traversed nodes to have %d nodes but received slice with %d nodes", len(expected), len(appendTo))
+	}
 	for i, node := range appendTo {
 		if expected[i] != node {
 			t.Errorf("Expected %q at index %d but received %q\n", expected[i], i, node)

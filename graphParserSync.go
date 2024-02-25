@@ -1,4 +1,4 @@
-package dependencygraph
+package dependor
 
 import (
 	"errors"
@@ -9,16 +9,16 @@ import (
 	"regexp"
 	"slices"
 
-	"github.com/stilt0n/dependor/lib/config"
-	"github.com/stilt0n/dependor/lib/tokenizer"
-	"github.com/stilt0n/dependor/lib/utils"
+	"github.com/stilt0n/dependor/internal/config"
+	"github.com/stilt0n/dependor/internal/tokenizer"
+	"github.com/stilt0n/dependor/internal/utils"
 )
 
 type SingleThreadedGraph struct {
 	tokens   map[string]*tokenizer.FileToken
 	config   *config.Config
 	rootPath string
-	edgeList map[string][]string
+	edgeList DependencyGraph
 }
 
 // Supports single optional rootPath argument. Uses "." by default.
@@ -44,7 +44,7 @@ func NewSync(rootPath ...string) *SingleThreadedGraph {
 	}
 }
 
-func (graph *SingleThreadedGraph) ParseGraph() (map[string][]string, error) {
+func (graph *SingleThreadedGraph) ParseGraph() (DependencyGraph, error) {
 	err := graph.walk()
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func (graph *SingleThreadedGraph) walk() error {
 }
 
 func (graph *SingleThreadedGraph) parseTokens() {
-	graph.edgeList = make(map[string][]string, len(graph.tokens))
+	graph.edgeList = make(DependencyGraph, len(graph.tokens))
 	for _, tk := range graph.tokens {
 		edges := make([]string, 0)
 		for importPath, importIdents := range tk.Imports {

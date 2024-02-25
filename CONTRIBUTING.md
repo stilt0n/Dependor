@@ -1,12 +1,35 @@
-# dependencytree package
+# Contributing
 
-This package recursively parses a filetree into a dependency graph.
+There isn't an established process for contributing to dependor yet, but you can open an issue to report bugs / request features and open a PR if you'd like to add something yourself.
 
-## Contributing
+## Project structure
 
-The logic for the package is all in `graphSync.go`. `dependor.json`, and everything in `test_tree` exists so that the code can be tested. Depending on the feature being added to dependencygraph, you may need to add more test files to the test_tree directory. For a high level overview of what this package does see [How it works](#how-it-works)
+### Public API
 
-## How it works
+All of dependor's public API is in the root directory. There are two parts to the public API:
+
+- The dependency graph parser, which is located in `graphParserSync.go` (there will eventually be a concurrent parser).
+- The dependency graph methods, which are located in `dependencyGraph.go`
+
+Then there are the associated tests. The parser tests make use of the `test_tree` directory which is full of JavaScript / TypeScript files that can be parsed for testing. When adding new features or fixing bugs, it may become necessary to add files to the test tree.
+
+For a more in depth overview of how parsing works see [How dependency parsing works](#how-dependency-parsing-works)
+
+### Internal packages
+
+There are a few internal packages that dependor uses when parsing:
+
+- tokenizer
+- config
+- utils
+
+The most complex of all of these package is tokenizer, which tokenizes JavaScript (or TypeScript) files. The tokenizer has its own [README](./internal/tokenizer/README.md) that goes into more detail on how tokenization works. The parser then does extra work on the file tokens to turn them into a dependency graph.
+
+The purpose of `config` is to read `dependor.json` config files. It also has a few utility methods that make use of config information to do things like resolve paths.
+
+`utils` has simple implementations of a Set and a Queue. These are useful for the dependency graph methods that use breadth-first search.
+
+## How dependency parsing works
 
 The main steps for parsing the file tree are in the `ParseGraph()` method. What parse graph does at a high level:
 
@@ -22,7 +45,7 @@ type ImportPath string
 type EdgeList map[FilePath][]ImportPath
 ```
 
-The aliases are added here for clarity but the actual type of the edge list in the code is just `map[string][]string`.
+Note that the aliases are added here for clarity and not used in the actual typing of the Edge List. The actual return type is a `DependencyGraph` which is just an alias for `map[string][]string` with a few useful receiver methods.
 
 #### Walk filetree and tokenize files
 
@@ -46,9 +69,9 @@ map[string]*tokenizer.FileToken
 
 The key for this map will always be `FileToken.FilePath`. The reason for storing the tokens in a map will become apparent in other methods.
 
-To see more details on FileTokens see the [tokenizer README](../tokenizer/README.md).
+To see more details on FileTokens see the [tokenizer README](./internal/tokenizer/README.md).
 
-One important detail is that the ReExportMap is unpopulated by the tokenizer. This is because creating it requires all the files in the tree to be tokenized.
+One important detail is that the ReExportMap is only partially populated by the tokenizer. This is because some parts of creating it require all the files in the tree to be tokenized.
 
 #### Resolve import extensions
 
@@ -65,7 +88,7 @@ Import aliases are also handled here. These could potentially be handled in the 
 
 #### Finish Index Maps
 
-ES Imports have a cool, but challenging to parse feature, you can import from a directory that has an `index.js` file in it:
+ES Imports have a cool, but challenging to parse, feature: you can import from a directory that has an `index.js` file in it:
 
 ```js
 // In foo.js

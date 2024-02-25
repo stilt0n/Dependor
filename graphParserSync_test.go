@@ -1,4 +1,4 @@
-package dependencygraph
+package dependor
 
 import (
 	"slices"

@@ -12,11 +12,54 @@ Dependor is written in Go, which means it can be compiled and (eventually) make 
 
 ## How to use Dependor
 
-Dependor is still somewhat in progress. The main API is the `dependencygraph` package.
+### Installing Dependor
 
-### `dependencygraph`
+You can install dependor using:
 
-The `dependencygraph` package is responsible for parsing a filetree into a JavaScript dependency graph. It has three public methods.
+```sh
+go get github.com/stilt0n/dependor
+```
+
+Or by importing it manually and using:
+
+```sh
+go mod tidy
+```
+
+### Configuring dependor
+
+Dependor uses a `dependor.json` file for configuration. There are two ways you can currently customize dependor:
+
+- Add ignore glob patterns for ignoring files and directories (it is usually a good idea to ignore node_modules and build/dist directories)
+- Path aliases in case you project uses any (e.g. Remix uses `~` for the `app` directory)
+
+The `dependor.json` looks like this:
+
+```json
+{
+  "ignorePatterns": ["**/node_modules", "**/dist", "**build"],
+  "pathAliases": { "~": "app" }
+}
+```
+
+### Simple Example
+
+It's easy to get started parsing dependencies with dependor:
+
+```go
+parser := dependor.NewSync(".")
+graph, err := parser.ParseGraph()
+if err != nil {
+  return err
+}
+for file, imports := range graph {
+  for _, imp := range imports {
+    fmt.Printf("%q imports %q\n", file, imp)
+  }
+}
+```
+
+### Parser Methods
 
 #### `NewSync`
 
@@ -34,7 +77,7 @@ Constructor for `SingleThreadedGraph`
 **Example:**
 
 ```go
-parser := NewSync("./path/to/root")
+parser := dependor.NewSync("./path/to/root")
 ```
 
 #### `SingleThreadedGraph.ParseGraph()`
@@ -64,16 +107,17 @@ None
 
 **Returns:**
 
-- `map[string][]string`
+- `DependencyGraph`
   - An adjacency list representation of the parsed directory's dependencies
+  - Is an alias for `map[string][]string` and can be used the same way
   - keys refer to files
-  - values are lists of the files those files import
+  - values are lists of the files the key files import
 - `error` non-nil when something goes wrong with parsing
 
 **Example:**
 
 ```go
-parser := NewSync("./path/to/root")
+parser := dependor.NewSync("./path/to/root")
 graph, err := parser.ParseGraph()
 if err != nil {
   handleError(err)
@@ -87,7 +131,7 @@ for file, imports := range graph {
 
 #### `SingleThreadedGraph.GetCustomConfig`
 
-Retrieves custom config values from `dependor.json`. Dependor is intended to be used in other tooling and in some cases it may be useful for that tooling to piggyback on the `dependor.json` config file rather than requiring an additional config file. Dependor will parse arbitrary config values and can return ones it does not make use of for other tooling to make use of.
+Retrieves custom config values from `dependor.json`. Dependor is intended to be used in other tooling and in some cases it may be useful for that tooling to piggyback on the `dependor.json` config file rather than requiring an additional config file. Dependor will parse arbitrary config values and can return values it does not make use of for other tooling to use.
 
 **Arguments:**
 None
@@ -100,7 +144,7 @@ None
 **Example:**
 
 ```go
-parser := NewSync()
+parser := dependor.NewSync()
 graph, err := parser.ParseGraph()
 
 // ...
@@ -123,94 +167,82 @@ if err := json.Unmarshal(jsonBytes, &customConfig); err == nil {
 }
 ```
 
-### `utils`
+### DependencyGraph Methods
 
-Utils has several utility functions and data structures that can be helpful for working with graphs. Utils is primarily intended for internal use and less likely to be stable than dependencygraph.
+The dependency graph is an alias for `map[string][]string` with some helpful receiver methods attached. Since it is just a `map` alias, it can be used the same way a map is used:
 
-#### `Deque`
+```go
+// Get value using key
+dependencies := dependencyGraph["foo.js"]
+// Set value using key (note: you shouldn't usually modify the graph)
+dependencyGraph["foo.js"] = []string{"bar.js", "baz.js"}
+```
 
-A simple implementation of a double-ended queue. Primarily intended for internal use but is generic and functions more-or-less as the method names suggest it should.
+#### `WriteToJSONFile`
 
-**Methods:**
-
-- `Enqueue`
-- `Dequeue`
-- `Push`
-- `Pop`
-
-#### `Set`
-
-A simple implementation of a set. Basically a wrapper for `map[T any]bool`. Primarily intended for internal use.
-
-**Methods:**
-
-- `Has`
-- `Add`
-- `Keys`
-
-#### `WriteGraph`
-
-Writes a graph to a json file called `dependor-output.json`.
+Writes the dependency graph to a JSON file.
 
 **Arguments:**
+`fileName string (optional)`:
 
-- `graph map[string][]string` edge list representation of a graph
+- The name of the file to write to.
+- If no name is provided the name `"dependor-output.json"` is used.
+- Panics if it fails to marshalling json or write the file
 
 **Returns:**
 void
 
+#### `WriteToJSONString`
+
+Writes the dependency graph to a JSON string.
+
+**Arguments:**
+None
+
+**Returns:**
+`(string, error)`
+
+- stringified JSON representation of the graph
+- error if json marshalling fails
+
 **Example:**
 
 ```go
-parser := dependencygraph.NewSync()
-graph, err := parser.ParseGraph()
-if err == nil {
-  utils.WriteGraph(graph)
+json, err := graph.WriteToJSONString()
+if err != nil {
+  return err
 }
+fmt.Println(json)
 ```
 
 #### `ReverseEdges`
 
-The graph tracks which files import other files, but you may also want to track which files are imported by other files. Reversing the graph allows you to do this. Does not modify original graph.
-
-e.g Turns:
+Returns a new dependency graph with the edge directions reversed. i.e.
 
 ```go
-{
-  // files imported by foo.js
-  "rootPath/files/foo.js": { "react", "rootPath/files/bar.js", "rootPath/letters.js", "rootPath/components/JSXComponent.jsx" },
-}
+example := DependencyGraph{ "foo": { "bar", "baz" }}
+reversed := example.ReverseEdges()
+// { "bar": {"foo"}, "baz": {"foo"}}
 ```
 
-into:
-
-```go
-{
-  // files that import 'react'
-  "react": {"rootPath/files/foo.js", /* ... */},
-  "rooPath/files/bar.js": { "rootPath/files/foo.js" },
-  "rootPath/letters.js": { "rootPath/files/foo.js" },
-  "rootPath/components/JSXComponent.jsx": { "rootPath/files/foo.js" },
-}
-```
+This can be useful if you need to figure out where a certain file is imported. _Does not modify original graph_.
 
 **Arguments:**
-
-- `graph map[string][]string` graph to reverse (does not modify)
+None
 
 **Returns:**
+`DependencyGraph`
 
-- `map[string][]string` reversed version of `graph`
+- A dependency graph with edges in reverse direction of the calling graph
 
-#### TraverseFn
+#### `Traverse`
 
-Performs a breadth-first traversal of a graph starting from `startingNode` and calls `fn` on each node traversed
+Performs a breadth-first traversal of the dependency graph starting from a given node and call a function on each visited node.
 
 **Arguments:**
 
-- `graph map[string][]string` graph to traverse
-- `startingNode string` starting place for graph traversal
-- `fn func(node string)` function to call on each node in graph
+- `startingNode string` the node to start the traversal from
+- `fn func(node string)` a function to call on each visited node
 
 **Returns:**
 void
@@ -218,16 +250,19 @@ void
 **Example:**
 
 ```go
-indirectImports := make([]string, 0)
-utils.TraverseFn(graph, "rootPath/files/foo.js", func(node string) {
-  indirectImports = append(indirectImports, node)
+var indirectDependencies []string
+graph.Traverse("foo.js", func(node string) {
+  // these are direct dependencies
+  if node != "foo.js" && !slices.Contains(graph["foo.js"], node) {
+    indirectDependencies = append(indirectDependencies, node)
+  }
 })
+fmt.Println("Indirect dependencies of foo.js:")
+for _, dep := range indirectDependencies {
+  fmt.Println(dep)
+}
 ```
 
-### Tokenizer
-
-The tokenizer is intended for internal use only. See [tokenizer README](./lib/tokenizer/README.md) for details about how tokenizer works.
-
-### Config
+### Extending `dependor.json` config
 
 `dependor.json` files can be extended to fit the use case of tooling that makes use of Dependor. See [GetCustomConfig](#getcustomconfig)
