@@ -63,7 +63,7 @@ for file, imports := range graph {
 
 #### `NewSync`
 
-Constructor for `SingleThreadedGraph`
+Constructor for `SingleThreadedGraphParser`
 
 **Arguments:**
 `rootPath string (optional)`:
@@ -72,9 +72,9 @@ Constructor for `SingleThreadedGraph`
 
 **Returns:**
 
-`*SingleThreadedGraph`:
+`*SingleThreadedGraphParser`:
 
-- A pointer to a `SingleThreadedGraph` struct
+- A pointer to a `SingleThreadedGraphParser` struct
 
 **Example:**
 
@@ -82,7 +82,7 @@ Constructor for `SingleThreadedGraph`
 parser := dependor.NewSync("./path/to/root")
 ```
 
-#### `SingleThreadedGraph.ParseGraph()`
+#### `SingleThreadedGraphParser.ParseGraph()`
 
 Parses the file tree into an adjacency list representation of the file tree's JavaScript dependency structure. For example this file:
 
@@ -132,7 +132,7 @@ for file, imports := range graph {
 }
 ```
 
-#### `SingleThreadedGraph.GetCustomConfig`
+#### `SingleThreadedGraphParser.GetCustomConfig`
 
 Retrieves custom config values from `dependor.json`. Dependor is intended to be used in other tooling and in some cases it may be useful for that tooling to piggyback on the `dependor.json` config file rather than requiring an additional config file. Dependor will parse arbitrary config values and can return values it does not make use of for other tooling to use.
 

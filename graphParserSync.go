@@ -14,7 +14,7 @@ import (
 	"github.com/stilt0n/dependor/internal/utils"
 )
 
-type SingleThreadedGraph struct {
+type SingleThreadedGraphParser struct {
 	tokens   map[string]*tokenizer.FileToken
 	config   *config.Config
 	rootPath string
@@ -22,7 +22,7 @@ type SingleThreadedGraph struct {
 }
 
 // Supports single optional rootPath argument. Uses "." by default.
-func NewSync(rootPath ...string) *SingleThreadedGraph {
+func NewSync(rootPath ...string) *SingleThreadedGraphParser {
 	rp := "."
 	if len(rootPath) > 0 {
 		rp = rootPath[0]
@@ -37,14 +37,14 @@ func NewSync(rootPath ...string) *SingleThreadedGraph {
 		fmt.Println("WARN: No dependor.json file was found so the default config is being used.")
 	}
 
-	return &SingleThreadedGraph{
+	return &SingleThreadedGraphParser{
 		config:   cfg,
 		rootPath: rp,
 		tokens:   make(map[string]*tokenizer.FileToken, 0),
 	}
 }
 
-func (graph *SingleThreadedGraph) ParseGraph() (DependencyGraph, error) {
+func (graph *SingleThreadedGraphParser) ParseGraph() (DependencyGraph, error) {
 	err := graph.walk()
 	if err != nil {
 		return nil, err
@@ -58,12 +58,12 @@ func (graph *SingleThreadedGraph) ParseGraph() (DependencyGraph, error) {
 	return graph.edgeList, nil
 }
 
-func (graph *SingleThreadedGraph) GetCustomConfig() ([]byte, error) {
+func (graph *SingleThreadedGraphParser) GetCustomConfig() ([]byte, error) {
 	return graph.config.GetCustomConfig()
 }
 
 // Walks file tree from root path and populates tokenizedFiles
-func (graph *SingleThreadedGraph) walk() error {
+func (graph *SingleThreadedGraphParser) walk() error {
 	searchableExtensions := regexp.MustCompile(`(\.js|\.jsx|\.ts|\.tsx)$`)
 	err := filepath.WalkDir(graph.rootPath, func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
@@ -85,7 +85,7 @@ func (graph *SingleThreadedGraph) walk() error {
 	return err
 }
 
-func (graph *SingleThreadedGraph) parseTokens() {
+func (graph *SingleThreadedGraphParser) parseTokens() {
 	graph.edgeList = make(DependencyGraph, len(graph.tokens))
 	for _, tk := range graph.tokens {
 		edges := make([]string, 0)
@@ -100,7 +100,7 @@ func (graph *SingleThreadedGraph) parseTokens() {
 	}
 }
 
-func (graph *SingleThreadedGraph) readImports(filePath string) {
+func (graph *SingleThreadedGraphParser) readImports(filePath string) {
 	tk, err := tokenizer.NewTokenizerFromFile(filePath)
 	if err != nil {
 		return
@@ -109,7 +109,7 @@ func (graph *SingleThreadedGraph) readImports(filePath string) {
 	graph.tokens[tokenizedFile.FilePath] = &tokenizedFile
 }
 
-func (graph *SingleThreadedGraph) resolveImportExtensions() {
+func (graph *SingleThreadedGraphParser) resolveImportExtensions() {
 	for _, tk := range graph.tokens {
 		updatedImports := make(map[string][]string, 0)
 		for originalPath, idents := range tk.Imports {
@@ -141,7 +141,7 @@ func (graph *SingleThreadedGraph) resolveImportExtensions() {
 	}
 }
 
-func (graph *SingleThreadedGraph) resolveIndexImport(pth string, idents []string) []string {
+func (graph *SingleThreadedGraphParser) resolveIndexImport(pth string, idents []string) []string {
 	resolvedPaths := make(utils.Set[string], 0)
 	for _, ident := range idents {
 		if slices.Contains(graph.tokens[pth].Exports, ident) {
@@ -157,7 +157,7 @@ func (graph *SingleThreadedGraph) resolveIndexImport(pth string, idents []string
 	return resolvedPaths.Keys()
 }
 
-func (graph *SingleThreadedGraph) finishIndexMaps() {
+func (graph *SingleThreadedGraphParser) finishIndexMaps() {
 	for _, tk := range graph.tokens {
 		// For now I am not supporting re-exports from non-index files but since
 		// it seems like most of the work for doing this is finished, I may do
