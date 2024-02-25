@@ -3,22 +3,21 @@ package main
 import (
 	"fmt"
 
-	"github.com/stilt0n/dependor/lib/dependencygraph"
-	"github.com/stilt0n/dependor/lib/utils"
+	"github.com/stilt0n/dependor"
 )
 
 func main() {
-	graph := dependencygraph.NewSync("./lib/dependencygraph")
-	edges, err := graph.ParseGraph()
+	graphParser := dependor.NewSync(".")
+	graph, err := graphParser.ParseGraph()
 	if err != nil {
 		fmt.Printf("Got an error. Error: %s", err)
 		return
 	}
-	printGraph(edges)
-	utils.WriteGraph(edges)
+	printGraph(graph)
+	graph.WriteToJSONFile()
 }
 
-func printGraph(graph map[string][]string) {
+func printGraph(graph dependor.DependencyGraph) {
 	for node, edges := range graph {
 		fmt.Printf("%q: {", node)
 		if len(edges) > 0 {
