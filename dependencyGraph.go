@@ -2,7 +2,6 @@ package dependor
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/stilt0n/dependor/internal/utils"
@@ -56,14 +55,16 @@ func (dg DependencyGraph) Traverse(startingNode string, fn func(node string)) {
 	workQueue := utils.NewQueue[string]()
 	seen := make(utils.Set[string], 0)
 	workQueue.Enqueue(startingNode)
-	fmt.Println(workQueue.Length())
+	seen.Add(startingNode)
 	for !workQueue.Empty() {
 		currentNode := workQueue.Dequeue()
-		seen.Add(currentNode)
 		edges := dg[currentNode]
 		fn(currentNode)
 		for _, edge := range edges {
-			workQueue.Enqueue(edge)
+			if !seen.Has(edge) {
+				workQueue.Enqueue(edge)
+				seen.Add(edge)
+			}
 		}
 	}
 }
