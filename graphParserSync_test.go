@@ -47,7 +47,6 @@ func TestParse(t *testing.T) {
 		}
 
 		// Now that tokenized imports are returned in a map the ordering is non-deterministic
-		// This test should be rewritten when dependencygraph is rewritten to use FileTokens
 		slices.Sort(expected)
 		slices.Sort(v)
 		for i, p := range v {
