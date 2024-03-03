@@ -7,8 +7,8 @@ import (
 
 func TestTerminates(t *testing.T) {
 	tk := New(`const foo = 5;`, "./testfiles")
-	result := tk.Tokenize()
-	output := result.ImportStrings()
+	tokenizedFile := tk.Tokenize()
+	output := getImportStrings(tokenizedFile)
 	if len(output) != 0 {
 		t.Fatalf("Should not be any import tokens")
 	}
@@ -23,10 +23,9 @@ func TestTerminatesOnBracedExportWithoutSemicolon(t *testing.T) {
 
 func TestSimpleRequire(t *testing.T) {
 	tokenizer := New(`const foo = require("./foo");`, ".")
-	result := tokenizer.Tokenize()
-	output := result.ImportStrings()
+	tokenizedFile := tokenizer.Tokenize()
+	output := getImportStrings(tokenizedFile)
 	if len(output) != 1 {
-		t.Log(result)
 		t.Fatalf("Expected output to be length 1. Got %d", len(output))
 	}
 	if output[0] != "foo" {
@@ -36,8 +35,8 @@ func TestSimpleRequire(t *testing.T) {
 
 func TestImportComments(t *testing.T) {
 	tokenizer := New(`const igloo = require/* rude */  /* ugh*/( /* why */"./igloo");`, ".")
-	result := tokenizer.Tokenize()
-	output := result.ImportStrings()
+	tokenizedFile := tokenizer.Tokenize()
+	output := getImportStrings(tokenizedFile)
 	if len(output) != 1 {
 		t.Fatalf("Expected output to be length 1. Got %d", len(output))
 	}
@@ -48,8 +47,8 @@ func TestImportComments(t *testing.T) {
 
 func TestSimpleImport(t *testing.T) {
 	tokenizer := New(`import foo from "./foo";`, ".")
-	result := tokenizer.Tokenize()
-	output := result.ImportStrings()
+	tokenizedFile := tokenizer.Tokenize()
+	output := getImportStrings(tokenizedFile)
 	if len(output) != 1 {
 		t.Fatalf("Expected output to be length 1. Got %d", len(output))
 	}
@@ -60,8 +59,8 @@ func TestSimpleImport(t *testing.T) {
 
 func TestDynamicImport(t *testing.T) {
 	tokenizer := New(`const foo = await import("./foo"); "bar";`, ".")
-	result := tokenizer.Tokenize()
-	output := result.ImportStrings()
+	tokenizedFile := tokenizer.Tokenize()
+	output := getImportStrings(tokenizedFile)
 	if len(output) != 1 {
 		t.Fatalf("Expected output to be length 1. Got %d", len(output))
 	}
@@ -85,8 +84,8 @@ func TestTokenizeFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected successful file read. Got error: %s", err)
 	}
-	result := tokenizer.Tokenize()
-	output := result.ImportStrings()
+	tokenizedFile := tokenizer.Tokenize()
+	output := getImportStrings(tokenizedFile)
 	expected := []string{
 		"fs",
 		"foo",
@@ -339,4 +338,14 @@ func testArray(t *testing.T, arr, expected []string) {
 			t.Errorf("Expected item at index %d to be %q but received %q instead.\n", i, expected[i], s)
 		}
 	}
+}
+
+func getImportStrings(f FileToken) []string {
+	importStrings := make([]string, len(f.Imports))
+	i := 0
+	for pth := range f.Imports {
+		importStrings[i] = pth
+		i++
+	}
+	return importStrings
 }
