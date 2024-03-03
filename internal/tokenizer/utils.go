@@ -1,4 +1,4 @@
-package experimental_tokenizer
+package tokenizer
 
 import (
 	"slices"
