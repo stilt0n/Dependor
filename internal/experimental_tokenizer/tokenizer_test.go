@@ -238,6 +238,63 @@ func TestReExports(t *testing.T) {
 	}
 }
 
+func TestMdnImports(t *testing.T) {
+	expected := map[string][]string{
+		"module-name0": {"default"},
+		"module-name1": {"*"},
+		"module-name2": {"export1"},
+		"module-name3": {"export1"},
+		"module-name4": {"default"},
+		"module-name5": {"export1", "export2"},
+		"module-name6": {"export1", "export2"},
+		"module-name7": {"default", "export1"},
+		"module-name8": {"default", "*"},
+		"module-name9": {},
+	}
+
+	tokenizer, err := NewTokenizerFromFile("./testfiles/mdn-import-examples.js")
+	if err != nil {
+		t.Fatalf("Expected successful file read. Got error: %s", err)
+	}
+
+	tokenizedFile := tokenizer.Tokenize()
+
+	testEdgeList(t, tokenizedFile.Imports, expected)
+}
+
+func TestMdnExports(t *testing.T) {
+	expectedExports := []string{
+		"functionName",
+		"ClassName",
+		"generatorFunctionName",
+		"name1",
+		"bar",
+		"name1",
+		"name2",
+		"name1",
+		"nameN",
+		"name1",
+		"name2",
+		"nameN",
+		"default",
+		"default",
+		"default",
+		"default",
+		"default",
+		"default",
+		"default",
+		"default",
+	}
+
+	tokenizer, err := NewTokenizerFromFile("./testfiles/mdn-export-examples.js")
+	if err != nil {
+		t.Fatalf("Expected successful file read. Got error: %s", err)
+	}
+
+	tokenizedFile := tokenizer.Tokenize()
+	testArray(t, tokenizedFile.Exports, expectedExports)
+}
+
 func testEdgeList(t *testing.T, edgeList, expected map[string][]string) {
 	if len(edgeList) != len(expected) {
 		t.Errorf("Expected edge list to have length %d but receive %d", len(expected), len(edgeList))
@@ -260,6 +317,19 @@ func testEdgeList(t *testing.T, edgeList, expected map[string][]string) {
 			if e != expectedEdges[i] {
 				t.Errorf("Expected edge at index %d to be %q but received %q instead.", i, expectedEdges[i], e)
 			}
+		}
+	}
+}
+
+func testArray(t *testing.T, arr, expected []string) {
+	if len(arr) != len(expected) {
+		t.Logf("%+v\n", arr)
+		t.Fatalf("Expected array length to be %d but received array of length %d instead\n", len(expected), len(arr))
+	}
+
+	for i, s := range arr {
+		if s != expected[i] {
+			t.Errorf("Expected item at index %d to be %q but received %q instead.\n", i, expected[i], s)
 		}
 	}
 }
