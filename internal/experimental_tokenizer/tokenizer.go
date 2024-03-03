@@ -125,7 +125,10 @@ Loop:
 			case "interface":
 				endChars = append(endChars, '{')
 			case "const", "let", "var", "function", "function*", "class", "type":
-				break
+				continue
+			case "default":
+				identifiers = append(identifiers, ident)
+				break Loop
 			default:
 				if overwriteLastIdentifier {
 					identifiers[len(identifiers)-1] = ident
@@ -189,7 +192,6 @@ func (t *Tokenizer) readImport() {
 	for t.char != 0 {
 		switch {
 		case t.char == '/':
-			fmt.Printf("Skipping comment. Characters read %s\n", string(t.fileRunes[0:t.currentIndex]))
 			t.skipComment(false)
 		case isIdentifierEnd(t.char):
 			if t.char == '{' {
@@ -213,8 +215,8 @@ func (t *Tokenizer) readImport() {
 			switch ident {
 			case "as":
 				skipNextIdentifier = true
-			case "from":
-				fmt.Printf("current char after from %c\n", t.char)
+			// Some typescript setups annotate imports of types as `import type { ... } ...`
+			case "from", "type":
 				continue
 			default:
 				if skipNextIdentifier {
@@ -242,7 +244,6 @@ Loop:
 		case unicode.IsSpace(t.char):
 			t.skipWhitespace()
 		default:
-			fmt.Printf("Final skip filler char %c\n", t.char)
 			break Loop
 		}
 	}
