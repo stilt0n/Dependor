@@ -105,6 +105,9 @@ Loop:
 		case t.char == '{':
 			haveSeenLeftBracket = true
 			t.readChar()
+		case t.char == ':':
+			overwriteLastIdentifier = true
+			t.readChar()
 		case t.char == '/':
 			t.skipComment(false)
 		case t.char == '}':

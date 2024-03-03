@@ -3,9 +3,9 @@
 // https://developer.mozilla.org/en-US/docs/web/javascript/reference/statements/export
 
 // Exporting declarations
-// TODO: Support these. These cases are trickier, if it weren't for
-// ASI then we could use semi colons to make handling these easy, but
-// since it exists that's not going to be a possibility.
+// TODO: Support these. The first case shouldn't be too hard
+// The second case may be impossible to support without implementing
+// expression parsing.
 // export let name1, name2/*, … */; // also var
 // export const name1 = 1, name2 = 2/*, … */; // also var, let
 export function functionName() { /* … */ }
@@ -31,9 +31,9 @@ export default class { /* … */ }
 export default function* () { /* … */ }
 
 // Aggregating modules
-export * from "module-name";
-export * as name1 from "module-name";
-export { name1, /* …, */ nameN } from "module-name";
-export { import1 as name1, import2 as name2, /* …, */ nameN } from "module-name";
-export { default, /* …, */ } from "module-name";
-export { default as name1 } from "module-name";
+export * from "module-name0";
+export * as name1 from "module-name1";
+export { name1, /* …, */ nameN } from "module-name2";
+export { import1 as name1, import2 as name2, /* …, */ nameN } from "module-name3";
+export { default, /* …, */ } from "module-name4";
+export { default as name1 } from "module-name5";
