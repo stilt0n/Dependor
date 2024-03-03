@@ -14,6 +14,13 @@ func TestTerminates(t *testing.T) {
 	}
 }
 
+func TestTerminatesOnBracedExportWithoutSemicolon(t *testing.T) {
+	tk := New(`export { foo, bar }`, ".")
+	tokenizedFile := tk.Tokenize()
+	expected := []string{"foo", "bar", "baz"}
+	testArray(t, tokenizedFile.Exports, expected)
+}
+
 func TestSimpleRequire(t *testing.T) {
 	tokenizer := New(`const foo = require("./foo");`, ".")
 	result := tokenizer.Tokenize()
