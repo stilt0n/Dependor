@@ -11,7 +11,7 @@ const ComponentWithDynamicData: FC<> = () => {
   }, []);
 
   console.log(dynamicData?.getData() ?? []);
-  return <p>import is a keyword but this should be ignored</p>;
+  return <p>Some jsx that should be ignored in the future</p>;
 };
 
 export default ComponentWithDynamicData;

@@ -59,7 +59,26 @@ for file, imports := range graph {
 }
 ```
 
-### Parser Methods
+### Caveats
+
+Dependor does not handle _all_ possible export syntax yet. Dependor tries to handle as many cases from the mdn docs (see for [imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import) and [exports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export)) but for exports there are some cases that are not yet handled:
+
+```js
+// 1.
+export let x, y;
+// 2.
+export const a = "a",
+  b = "b",
+  c = "c";
+// 3.
+export { foo as "invalid identifier alias" } from "./foo";
+```
+
+Cases 1 and 3 will likely be handled sometime in the near future (with lower priority on 3. which seems obscure enough that even my ESLint config thinks it's wrong). Case 2 is unlikely to be handled by Dependor any time soon, because I have been unable to think of a way to do so without implementing JavaScript expression parsing, which would pretty much require me to write a full JavaScript parser.
+
+There is also a [known bug](https://github.com/stilt0n/dependor/issues/19) where import statements inside JSX tags are not ignored. This should cause the tokenizer to panic, so if you're not getting errors this bug probably doesn't effect you.
+
+## Parser Methods
 
 #### `NewSync`
 

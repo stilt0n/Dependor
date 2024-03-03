@@ -32,11 +32,41 @@ type fileToken struct {
 }
 ```
 
+### Import and Export syntax
+
+We don't look for commonJs exports because we don't need them to construct the dependency graph.
+
+For ES imports and exports, dependor tries to handle most of the cases from the MDN docs:
+
+- [docs for imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import)
+- [docs for exports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export)
+
+There are a few exceptions:
+This case is not addressed but may be addressed in the near future.
+
+```js
+export let x, y;
+```
+
+This case will probably not be addressed for a long time because I can't think of a way to do it without implementing JavaScript expression parsing, which would be a massive task.
+
+```js
+export const a = "a",
+  b = "b",
+  c = "c";
+```
+
+Not implemented but may be in the future. This case is low priority because it seems like bad practice, so much so that my ESLint doesn't recognize it as valid syntax.
+
+```js
+export { x as "invalid identifier" } from "./foo";
+```
+
 ### Finding imports
 
 For dynamic imports and require statements only the import paths are tracked because additional information is unnecessary to resolve those paths.
 
-For esmodule imports:
+For esmodule imports the assumptions are:
 
 - Every identifier between the keyword `import` and the keyword `from` is an identifier
 - The first string after `import` is the import path
@@ -45,6 +75,7 @@ For esmodule imports:
   - Whitespace
   - Commas
   - Curly Braces
+  - Semicolons
   - Slash (i.e. comment starts)
 
 The tokenizer assumes that it is being given valid JavaScript syntax. Syntax errrors may cause issues with tokenization. I have no plans to address this unless it can be done in a way that doesn't degrade performance.
@@ -53,12 +84,28 @@ The tokenizer assumes that it is being given valid JavaScript syntax. Syntax err
 
 I am not tracking common js exports for now since I only track exports to allow me correctly route re-exports at parse time. I don't think you can re-export in common js and I am generally assuming that people are not mixing es exports and common js require statements in a way where they are re-exporting from a common js file. I also don't think you can re-export dynamic imports.
 
-The export cases I'm currently considering are:
+The export cases I'm currently considering are in `mdn-export-examples.js`:
 
 ```js
-export const foo = [...etc];
-export { foo, bar, baz };
-export default etc;
+export const variable = /* ... */;
+export function functionName() { /* … */ }
+export class ClassName { /* … */ }
+export function* generatorFunctionName() { /* … */ }
+export const { name1, name2: bar } = o;
+export const [ name1, name2 ] = array;
+
+export { name1, /* …, */ nameN };
+export { variable1 as name1, variable2 as name2, /* …, */ nameN };
+export { name1 as default /*, … */ };
+
+// Default exports
+export default expression;
+export default function functionName() { /* … */ }
+export default class ClassName { /* … */ }
+export default function* generatorFunctionName() { /* … */ }
+export default function () { /* … */ }
+export default class { /* … */ }
+export default function* () { /* … */ }
 ```
 
 For the default export case, we just store "default" as the identifier since it can have an arbitrary name when imported.
@@ -73,7 +120,13 @@ export { foo, bar, baz } from "./foo";
 
 Here, we need to make sure we don't treat the re-exports as exports since they are just being forwarded from another file. When we run into the `from` token, then the exported identifiers should be ignored and the following path should be saved to `reExports`.
 
-Finally, exports can also have aliases, which need to be treated differently from import alaises. For an import, we should skip the alias to allow for correct mapping between files. But for exports, we need to use the alias and skip the unaliased identifier. To do this, we can simply use the `as` token as a flag to overwrite the previous index in the `exports` array.
+Finally, exports can also have aliases, which need to be treated differently from import alaises. For an import, we should skip the alias to allow for correct mapping between files. But for exports, we need to use the alias and skip the unaliased identifier. To do this, we can simply use the `as` token as a flag to overwrite the previous index in the `exports` array. Exports can also be alliased when they are being destructured from an object:
+
+```js
+export const { foo: aliasForFoo } = obj;
+```
+
+So we also set the overwrite flag when we encounter `:`.
 
 ### Re-exports
 

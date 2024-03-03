@@ -19,6 +19,7 @@ func TestSimpleRequire(t *testing.T) {
 	result := tokenizer.Tokenize()
 	output := result.ImportStrings()
 	if len(output) != 1 {
+		t.Log(result)
 		t.Fatalf("Expected output to be length 1. Got %d", len(output))
 	}
 	if output[0] != "foo" {
@@ -51,7 +52,7 @@ func TestSimpleImport(t *testing.T) {
 }
 
 func TestDynamicImport(t *testing.T) {
-	tokenizer := New(`const foo = await import("./foo");`, ".")
+	tokenizer := New(`const foo = await import("./foo"); "bar";`, ".")
 	result := tokenizer.Tokenize()
 	output := result.ImportStrings()
 	if len(output) != 1 {
@@ -62,13 +63,14 @@ func TestDynamicImport(t *testing.T) {
 	}
 }
 
-func TestInvalidImport(t *testing.T) {
+func TestNonTerminatingImport(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("Expected panic on non-terminating import\n")
+		}
+	}()
 	tokenizer := New(`import hello there`, ".")
-	result := tokenizer.Tokenize()
-	output := result.ImportStrings()
-	if len(output) != 0 {
-		t.Fatalf("Expected no imports to be output. Got %s", output[0])
-	}
+	tokenizer.Tokenize()
 }
 
 func TestTokenizeFile(t *testing.T) {
@@ -93,6 +95,9 @@ func TestTokenizeFile(t *testing.T) {
 		"testfiles/nested/space/bar.json",
 		"tricky",
 	}
+	if len(output) != len(expected) {
+		t.Errorf("Expected output to have %d imports but received %d\n", len(expected), len(output))
+	}
 	slices.Sort(expected)
 	slices.Sort(output)
 	for i, imp := range output {
@@ -100,6 +105,7 @@ func TestTokenizeFile(t *testing.T) {
 			t.Errorf("Error in example %d.\n  Got: %s\n  Expected: %s", i, imp, expected[i])
 		}
 	}
+	t.Log(output)
 }
 
 func TestTokenizeIdentifiers(t *testing.T) {
@@ -151,6 +157,7 @@ func TestImportTypes(t *testing.T) {
 	tokenizedFile := tokenizer.Tokenize()
 
 	testEdgeList(t, tokenizedFile.Imports, expected)
+	t.Logf("%+v\n", tokenizedFile.Imports)
 }
 
 func TestTokenizeExports(t *testing.T) {
@@ -175,7 +182,9 @@ func TestTokenizeExports(t *testing.T) {
 	tokenizedFile := tokenizer.Tokenize()
 
 	if len(tokenizedFile.Exports) != len(expectedExports) {
+		t.Logf("%+v\n", tokenizedFile.Exports)
 		t.Fatalf("Expected exports length to be %d but received length %d", len(expectedExports), len(tokenizedFile.Exports))
+
 	}
 
 	for i, ident := range tokenizedFile.Exports {
@@ -204,6 +213,7 @@ func TestReExports(t *testing.T) {
 	tokenizedFile := tokenizer.Tokenize()
 
 	if len(tokenizedFile.ReExports) != len(expectedReExports) {
+		t.Logf("%+v\n", tokenizedFile.ReExports)
 		t.Fatalf("Expected %d re-exports but received %d", len(expectedReExports), len(tokenizedFile.ReExports))
 	}
 
@@ -228,6 +238,63 @@ func TestReExports(t *testing.T) {
 	}
 }
 
+func TestMdnImports(t *testing.T) {
+	expected := map[string][]string{
+		"module-name0": {"default"},
+		"module-name1": {"*"},
+		"module-name2": {"export1"},
+		"module-name3": {"export1"},
+		"module-name4": {"default"},
+		"module-name5": {"export1", "export2"},
+		"module-name6": {"export1", "export2"},
+		"module-name7": {"default", "export1"},
+		"module-name8": {"default", "*"},
+		"module-name9": {},
+	}
+
+	tokenizer, err := NewTokenizerFromFile("./testfiles/mdn-import-examples.js")
+	if err != nil {
+		t.Fatalf("Expected successful file read. Got error: %s", err)
+	}
+
+	tokenizedFile := tokenizer.Tokenize()
+
+	testEdgeList(t, tokenizedFile.Imports, expected)
+}
+
+func TestMdnExports(t *testing.T) {
+	expectedExports := []string{
+		"functionName",
+		"ClassName",
+		"generatorFunctionName",
+		"name1",
+		"bar",
+		"name1",
+		"name2",
+		"name1",
+		"nameN",
+		"name1",
+		"name2",
+		"nameN",
+		"default",
+		"default",
+		"default",
+		"default",
+		"default",
+		"default",
+		"default",
+		"default",
+	}
+
+	tokenizer, err := NewTokenizerFromFile("./testfiles/mdn-export-examples.js")
+	if err != nil {
+		t.Fatalf("Expected successful file read. Got error: %s", err)
+	}
+
+	tokenizedFile := tokenizer.Tokenize()
+	testArray(t, tokenizedFile.Exports, expectedExports)
+}
+
 func testEdgeList(t *testing.T, edgeList, expected map[string][]string) {
 	if len(edgeList) != len(expected) {
 		t.Errorf("Expected edge list to have length %d but receive %d", len(expected), len(edgeList))
@@ -250,6 +317,19 @@ func testEdgeList(t *testing.T, edgeList, expected map[string][]string) {
 			if e != expectedEdges[i] {
 				t.Errorf("Expected edge at index %d to be %q but received %q instead.", i, expectedEdges[i], e)
 			}
+		}
+	}
+}
+
+func testArray(t *testing.T, arr, expected []string) {
+	if len(arr) != len(expected) {
+		t.Logf("%+v\n", arr)
+		t.Fatalf("Expected array length to be %d but received array of length %d instead\n", len(expected), len(arr))
+	}
+
+	for i, s := range arr {
+		if s != expected[i] {
+			t.Errorf("Expected item at index %d to be %q but received %q instead.\n", i, expected[i], s)
 		}
 	}
 }
