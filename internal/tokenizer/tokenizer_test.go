@@ -17,7 +17,7 @@ func TestTerminates(t *testing.T) {
 func TestTerminatesOnBracedExportWithoutSemicolon(t *testing.T) {
 	tk := New(`export { foo, bar }`, ".")
 	tokenizedFile := tk.Tokenize()
-	expected := []string{"foo", "bar", "baz"}
+	expected := []string{"foo", "bar"}
 	testArray(t, tokenizedFile.Exports, expected)
 }
 
