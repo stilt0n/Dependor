@@ -87,6 +87,7 @@ func (t *Tokenizer) Tokenize() tokenizer.FileToken {
 func (t *Tokenizer) readExport() {
 	var identifiers []string
 	isReExport := false
+	haveSeenLeftBracket := false
 	// '}' is also sort of an an endChar. e.g. export { foo, bar } w/o semi-colon
 	// but it's ambiguous because for re-exports we'd need to continue. I'm not sure
 	// there's any way to handle this case besides looking ahead afterwards
@@ -101,6 +102,9 @@ Loop:
 		// this needs to come before isIdentifierEnd check because some of these chars are shared
 		case slices.Contains(endChars, t.char):
 			break Loop
+		case t.char == '{':
+			haveSeenLeftBracket = true
+			t.readChar()
 		case t.char == '/':
 			t.skipComment(false)
 		case t.char == '}':
@@ -126,10 +130,11 @@ Loop:
 				endChars = append(endChars, '{')
 			case "const", "let", "var", "function", "function*", "class", "type":
 				continue
-			case "default":
-				identifiers = append(identifiers, ident)
-				break Loop
 			default:
+				if ident == "default" && !haveSeenLeftBracket {
+					identifiers = append(identifiers, ident)
+					break Loop
+				}
 				if overwriteLastIdentifier {
 					identifiers[len(identifiers)-1] = ident
 					overwriteLastIdentifier = false
@@ -139,7 +144,6 @@ Loop:
 			}
 		}
 	}
-
 	if endedOnBracket {
 		t.readChar()
 		t.skipAllFiller()
@@ -154,6 +158,10 @@ Loop:
 	if !isReExport {
 		t.exports = append(t.exports, identifiers...)
 		return
+	}
+
+	if t.reExportMap == nil {
+		t.reExportMap = make(map[string]string, 0)
 	}
 
 	t.skipAllFiller()

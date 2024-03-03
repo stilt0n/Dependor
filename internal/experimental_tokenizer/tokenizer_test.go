@@ -194,48 +194,49 @@ func TestTokenizeExports(t *testing.T) {
 	}
 }
 
-// func TestReExports(t *testing.T) {
-// 	expectedReExports := []string{
-// 		"testfiles/nested/test",
-// 		"testfiles/nested/test2",
-// 	}
+func TestReExports(t *testing.T) {
+	expectedReExports := []string{
+		"testfiles/nested/test",
+		"testfiles/nested/test2",
+	}
 
-// 	expectedReExportMap := map[string]string{
-// 		"func":                   "testfiles/nested/test",
-// 		"testfiles/nested/test2": "*",
-// 	}
+	expectedReExportMap := map[string]string{
+		"func":                   "testfiles/nested/test",
+		"testfiles/nested/test2": "*",
+	}
 
-// 	tokenizer, err := NewTokenizerFromFile("./testfiles/nested/index.js")
-// 	if err != nil {
-// 		t.Fatalf("Expected successful file read. Got error: %s", err)
-// 	}
+	tokenizer, err := NewTokenizerFromFile("./testfiles/nested/index.js")
+	if err != nil {
+		t.Fatalf("Expected successful file read. Got error: %s", err)
+	}
 
-// 	tokenizedFile := tokenizer.Tokenize()
+	tokenizedFile := tokenizer.Tokenize()
 
-// 	if len(tokenizedFile.ReExports) != len(expectedReExports) {
-// 		t.Fatalf("Expected %d re-exports but received %d", len(expectedReExports), len(tokenizedFile.ReExports))
-// 	}
+	if len(tokenizedFile.ReExports) != len(expectedReExports) {
+		t.Logf("%+v\n", tokenizedFile.ReExports)
+		t.Fatalf("Expected %d re-exports but received %d", len(expectedReExports), len(tokenizedFile.ReExports))
+	}
 
-// 	for i, rex := range tokenizedFile.ReExports {
-// 		if rex != expectedReExports[i] {
-// 			t.Errorf("Expected re-export at index %d to be %q but received %q", i, expectedReExports[i], rex)
-// 		}
-// 	}
+	for i, rex := range tokenizedFile.ReExports {
+		if rex != expectedReExports[i] {
+			t.Errorf("Expected re-export at index %d to be %q but received %q", i, expectedReExports[i], rex)
+		}
+	}
 
-// 	if len(tokenizedFile.ReExportMap) != len(expectedReExportMap) {
-// 		t.Log(tokenizedFile.ReExportMap)
-// 		t.Fatalf("Expected %d entries in the re-export map but received %d", len(expectedReExportMap), len(tokenizedFile.ReExportMap))
-// 	}
-// 	for k, v := range tokenizedFile.ReExportMap {
-// 		expectedValue, keyExists := expectedReExportMap[k]
-// 		if !keyExists {
-// 			t.Fatalf("Received unexpected key %q from reExportMap", k)
-// 		}
-// 		if expectedValue != v {
-// 			t.Errorf("Received wrong value for key %q. Expected %q received %q", k, expectedValue, v)
-// 		}
-// 	}
-// }
+	if len(tokenizedFile.ReExportMap) != len(expectedReExportMap) {
+		t.Log(tokenizedFile.ReExportMap)
+		t.Fatalf("Expected %d entries in the re-export map but received %d", len(expectedReExportMap), len(tokenizedFile.ReExportMap))
+	}
+	for k, v := range tokenizedFile.ReExportMap {
+		expectedValue, keyExists := expectedReExportMap[k]
+		if !keyExists {
+			t.Fatalf("Received unexpected key %q from reExportMap", k)
+		}
+		if expectedValue != v {
+			t.Errorf("Received wrong value for key %q. Expected %q received %q", k, expectedValue, v)
+		}
+	}
+}
 
 func testEdgeList(t *testing.T, edgeList, expected map[string][]string) {
 	if len(edgeList) != len(expected) {
