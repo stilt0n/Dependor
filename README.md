@@ -61,7 +61,7 @@ for file, imports := range graph {
 
 ### Caveats
 
-Dependor does not handle _all_ possible export syntax yet. Dependor tries to handle as many cases from the mdn docs (see for [imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import) and [exports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export)) but for exports there are some cases that are not yet handled:
+Dependor does not handle _all_ possible export syntax yet. Dependor tries to handle as many cases from the mdn docs as possible (see mdn docs for [imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import) and [exports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export)) but for exports there are some cases that are not yet handled:
 
 ```js
 // 1.
