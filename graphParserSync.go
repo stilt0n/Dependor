@@ -27,12 +27,13 @@ func NewSync(rootPath ...string) *SingleThreadedGraphParser {
 	if len(rootPath) > 0 {
 		rp = rootPath[0]
 	}
-	configPath := rp + "/dependor.json"
-	if _, err := os.Stat(configPath); rp != "." && err != nil {
-		panic(fmt.Sprintf("Root path does not exist or does not have a valid dependor.json config file. To use default config, omit rootPath arg. See error %s\n", err))
+
+	err := os.Chdir(rp)
+	if err != nil {
+		panic(fmt.Sprintf("Root path does not exist. See error %s\n", err))
 	}
 
-	cfg, err := config.ReadConfig(rp + "/dependor.json")
+	cfg, err := config.ReadConfig("dependor.json")
 	if err != nil {
 		fmt.Println("WARN: No dependor.json file was found so the default config is being used.")
 	}
