@@ -50,7 +50,7 @@ func (dg DependencyGraph) ReverseEdges() DependencyGraph {
 }
 
 // Performs a breadth-first traversal of the dependency graph
-// starting from `startingNode` and call `fn` on each visited node
+// starting from `startingNode` and calls `fn` on each visited node
 func (dg DependencyGraph) Traverse(startingNode string, fn func(node string)) {
 	workQueue := utils.NewQueue[string]()
 	seen := make(utils.Set[string], 0)
