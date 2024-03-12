@@ -76,7 +76,7 @@ export { foo as "invalid identifier alias" } from "./foo";
 
 Cases 1 and 3 will likely be handled sometime in the near future (with lower priority on 3. which seems obscure enough that even my ESLint config thinks it's wrong). Case 2 is unlikely to be handled by Dependor any time soon, because I have been unable to think of a way to do so without implementing JavaScript expression parsing, which would pretty much require me to write a full JavaScript parser.
 
-There is also a [known bug](https://github.com/stilt0n/dependor/issues/19) where import statements inside JSX tags are not ignored. This should cause the tokenizer to panic, so if you're not getting errors this bug probably doesn't effect you.
+There is also a [known bug](https://github.com/stilt0n/dependor/issues/19) where import statements inside JSX tags are not ignored. Unless you have a completely valid import statement inside of a JSX tag this will cause the tokenizer to panic, so if you're not getting errors this bug probably doesn't effect you.
 
 ## Parser Methods
 
@@ -266,7 +266,7 @@ None
 
 #### `Traverse`
 
-Performs a breadth-first traversal of the dependency graph starting from a given node and call a function on each visited node.
+Performs a breadth-first traversal of the dependency graph starting from a given node and calls a function on each visited node.
 
 **Arguments:**
 
