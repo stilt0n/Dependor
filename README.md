@@ -8,7 +8,7 @@ I have CI scripts that make use of tools that analyze the project's dependency g
 
 Having a JavaScript depency parser means I can start writing my own dependency tools.
 
-Dependor is written in Go, which means it can be compiled and (eventually) make use of concurrency. Dependor also _only_ parses dependencies insteaded of a full JavaScript AST. This can help prevent dependency parsing from becoming too much of a bottleneck for tooling that uses it as a first step.
+Dependor is written in Go, which means it can be compiled and (eventually) make use of concurrency. Dependor also _only_ parses dependencies instead of a full JavaScript AST. This can help prevent dependency parsing from becoming too much of a bottleneck for tooling that uses it as a first step.
 
 ## How to use Dependor
 
