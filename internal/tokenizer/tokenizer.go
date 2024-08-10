@@ -86,6 +86,10 @@ func (t *Tokenizer) readExport() {
 	var identifiers []string
 	isReExport := false
 	haveSeenLeftBrace := false
+	// interface declarations can extend other interfaces
+	// to deal with the this we need to return immediately
+	// after encountering the next identifier
+	haveSeenInterface := false
 	// '}' is also sort of an an endChar. e.g. export { foo, bar } w/o semi-colon
 	// but it's ambiguous because for re-exports we'd need to continue. I'm not sure
 	// there's any way to handle this case besides looking ahead afterwards
@@ -128,11 +132,15 @@ Loop:
 				isReExport = true
 				break Loop
 			case "interface":
-				endChars = append(endChars, '{')
+				haveSeenInterface = true
 			case "const", "let", "var", "function", "function*", "class", "type":
 				continue
 			default:
 				if ident == "default" && !haveSeenLeftBrace {
+					identifiers = append(identifiers, ident)
+					break Loop
+				}
+				if haveSeenInterface {
 					identifiers = append(identifiers, ident)
 					break Loop
 				}
