@@ -79,6 +79,12 @@ func TestNonTerminatingImport(t *testing.T) {
 	tokenizer.Tokenize()
 }
 
+func TestInterfaceExport(t *testing.T) {
+	tokenizer := New(`export interface EdgeCase extends Pick<Foo, 'bar' | 'baz'> {};`, "*")
+	tokenizedFile := tokenizer.Tokenize()
+	testArray(t, tokenizedFile.Exports, []string{"EdgeCase"})
+}
+
 func TestTokenizeFile(t *testing.T) {
 	tokenizer, err := NewTokenizerFromFile("./testfiles/nested/test.js")
 	if err != nil {
