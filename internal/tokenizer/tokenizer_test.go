@@ -307,6 +307,21 @@ func TestMdnExports(t *testing.T) {
 	testArray(t, tokenizedFile.Exports, expectedExports)
 }
 
+func TestInterfacesAndClasses(t *testing.T) {
+	expectedExports := []string{
+		"Extender",
+		"Basic",
+		// TODO: Handle generics
+		// "Stack",
+	}
+	tokenizer, err := NewTokenizerFromFile("./testfiles/interfaces-and-classes.ts")
+	if err != nil {
+		t.Fatalf("Expected successful file read. Got error: %s", err)
+	}
+	tokenizedFile := tokenizer.Tokenize()
+	testArray(t, tokenizedFile.Exports, expectedExports)
+}
+
 func testEdgeList(t *testing.T, edgeList, expected map[string][]string) {
 	if len(edgeList) != len(expected) {
 		t.Errorf("Expected edge list to have length %d but receive %d", len(expected), len(edgeList))
