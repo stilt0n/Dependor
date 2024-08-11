@@ -326,6 +326,8 @@ func TestTypes(t *testing.T) {
 	expectedExports := []string{
 		"foo",
 		"MyComponent",
+		"NestedGeneric",
+		"Brutal",
 		"LinkedListNode",
 		"LinkedList",
 	}
