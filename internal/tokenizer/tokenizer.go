@@ -108,6 +108,11 @@ Loop:
 			haveSeenLeftBrace = true
 			t.readChar()
 		case t.char == ':':
+			if !haveSeenLeftBrace {
+				// outside of braces this is a type annotation
+				break Loop
+			}
+			// inside of braces this is an alias
 			overwriteLastIdentifier = true
 			t.readChar()
 		case t.char == '/':
@@ -330,6 +335,11 @@ func (t *Tokenizer) skipMultiLineComment() {
 	}
 	t.readChar()
 	t.readChar()
+}
+
+// e.g. React.FC<Pick<x, 'y' | 'z'>>
+func (t *Tokenizer) skipGenericTypeArgument() {
+
 }
 
 func (t *Tokenizer) readIdentifier() string {
