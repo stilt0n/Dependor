@@ -31,7 +31,7 @@ export interface LinkedListNode<T> {
   next?: LinkedListNode<T>;
 }
 // generic in class
-class LinkedList<T> {
+export class LinkedList<T> {
   private head: LinkedListNode<T> | null = null;
   private length: number = 0;
 
