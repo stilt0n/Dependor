@@ -311,10 +311,25 @@ func TestInterfacesAndClasses(t *testing.T) {
 	expectedExports := []string{
 		"Extender",
 		"Basic",
-		// TODO: Handle generics
-		// "Stack",
+		"Advanced",
+		"Stack",
 	}
 	tokenizer, err := NewTokenizerFromFile("./testfiles/interfaces-and-classes.ts")
+	if err != nil {
+		t.Fatalf("Expected successful file read. Got error: %s", err)
+	}
+	tokenizedFile := tokenizer.Tokenize()
+	testArray(t, tokenizedFile.Exports, expectedExports)
+}
+
+func TestTypes(t *testing.T) {
+	expectedExports := []string{
+		"foo",
+		"MyComponent",
+		"LinkedListNode",
+		"LinkedList",
+	}
+	tokenizer, err := NewTokenizerFromFile("./testfiles/types.tsx")
 	if err != nil {
 		t.Fatalf("Expected successful file read. Got error: %s", err)
 	}

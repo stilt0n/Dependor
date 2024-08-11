@@ -17,27 +17,36 @@ export class Basic {
   }
 }
 
-// TODO: Handle generic types
-// export class Stack<T> {
-//   private _stack: T[]
-//   constructor(init?: T[]) {
-//     this._stack = init ?? [];
-//   }
+export class Advanced extends Basic {
+  constructor() {
+    super();
+  }
 
-//   push(key: T) {
-//     this._stack.push(key);
-//     return this._stack.length;
-//   }
+  helloAgain() {
+    console.log('hello again?');
+  }
+}
 
-//   pop() {
-//     return this._stack.pop();
-//   }
+export class Stack<T> {
+  private _stack: T[]
+  constructor(init?: T[]) {
+    this._stack = init ?? [];
+  }
 
-//   top() {
-//     return this._stack[this._stack.length - 1];
-//   }
+  push(key: T) {
+    this._stack.push(key);
+    return this._stack.length;
+  }
 
-//   size() {
-//     return this._stack.length;
-//   }
-// }
+  pop() {
+    return this._stack.pop();
+  }
+
+  top() {
+    return this._stack[this._stack.length - 1];
+  }
+
+  size() {
+    return this._stack.length;
+  }
+}
