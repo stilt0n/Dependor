@@ -96,7 +96,7 @@ func (t *Tokenizer) readExport() {
 	endedOnBrace := false
 	// overwrite exported identifiers with their aliases so that they are correctly mapped to importing files
 	overwriteLastIdentifier := false
-	endChars := []rune{';', '(', '='}
+	endChars := []rune{';', '(', '=', '<'}
 
 Loop:
 	for t.char != 0 {
@@ -335,11 +335,6 @@ func (t *Tokenizer) skipMultiLineComment() {
 	}
 	t.readChar()
 	t.readChar()
-}
-
-// e.g. React.FC<Pick<x, 'y' | 'z'>>
-func (t *Tokenizer) skipGenericTypeArgument() {
-
 }
 
 func (t *Tokenizer) readIdentifier() string {

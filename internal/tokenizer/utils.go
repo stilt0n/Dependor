@@ -30,6 +30,8 @@ var identifier_ends = []rune{
 	'[',
 	']',
 	':',
+	// Note: this can happen in generic types e.g. export class LinkedList<T>
+	'<',
 }
 
 func isIdentifierEnd(char rune) bool {
