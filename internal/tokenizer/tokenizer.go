@@ -372,8 +372,8 @@ func (t *Tokenizer) readPathString() string {
 	return pathString
 }
 
-// need to skip strings to avoid reading code inside of strings as real strings
-// this needs to be a recursive process because a string can be nested inside
+// need to skip strings to avoid treating code inside of strings as real code.
+// This needs to be a recursive process because a string can be nested inside
 // of a string. We also need to handle escaped strings
 func (t *Tokenizer) skipString(startChar rune) {
 	t.readChar()
