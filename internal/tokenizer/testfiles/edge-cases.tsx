@@ -1,3 +1,5 @@
+export const imports = "import";
+let s = "string";
 export const exports = "export";
 
 const Export = () => {

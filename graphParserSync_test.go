@@ -25,6 +25,7 @@ func TestParse(t *testing.T) {
 		"test_tree/re-exports/rexa.js":                                {},
 		"test_tree/re-exports/rexb.js":                                {},
 		"test_tree/re-exports/rexc.js":                                {},
+		"test_tree/edge-cases.js":                                     {},
 		"test_tree/type-edge-cases.ts":                                {},
 	}
 
