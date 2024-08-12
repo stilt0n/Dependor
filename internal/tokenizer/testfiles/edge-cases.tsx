@@ -1,12 +1,12 @@
-export const exports = { default: "foo" };
+export const exports = "export";
 
-const DefaultExport = () => {
+const Export = () => {
   "use-nothing";
   return <p>paragraph</p>;
 };
 
 const OtherComponet = () => {
-  return <DefaultExport />;
+  return <Export />;
 };
 
 console.log("without from");
