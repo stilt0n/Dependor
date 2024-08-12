@@ -297,14 +297,7 @@ func TestMdnExports(t *testing.T) {
 		"default",
 		"default",
 	}
-
-	tokenizer, err := NewTokenizerFromFile("./testfiles/mdn-export-examples.js")
-	if err != nil {
-		t.Fatalf("Expected successful file read. Got error: %s", err)
-	}
-
-	tokenizedFile := tokenizer.Tokenize()
-	testArray(t, tokenizedFile.Exports, expectedExports)
+	testFileExports(t, "./testfiles/mdn-export-examples.js", expectedExports)
 }
 
 func TestInterfacesAndClasses(t *testing.T) {
@@ -314,12 +307,7 @@ func TestInterfacesAndClasses(t *testing.T) {
 		"Advanced",
 		"Stack",
 	}
-	tokenizer, err := NewTokenizerFromFile("./testfiles/interfaces-and-classes.ts")
-	if err != nil {
-		t.Fatalf("Expected successful file read. Got error: %s", err)
-	}
-	tokenizedFile := tokenizer.Tokenize()
-	testArray(t, tokenizedFile.Exports, expectedExports)
+	testFileExports(t, "./testfiles/interfaces-and-classes.ts", expectedExports)
 }
 
 func TestTypes(t *testing.T) {
@@ -331,12 +319,14 @@ func TestTypes(t *testing.T) {
 		"LinkedListNode",
 		"LinkedList",
 	}
-	tokenizer, err := NewTokenizerFromFile("./testfiles/types.tsx")
-	if err != nil {
-		t.Fatalf("Expected successful file read. Got error: %s", err)
+	testFileExports(t, "./testfiles/types.tsx", expectedExports)
+}
+
+func TestEdgeCases(t *testing.T) {
+	expectedExports := []string{
+		"exports",
 	}
-	tokenizedFile := tokenizer.Tokenize()
-	testArray(t, tokenizedFile.Exports, expectedExports)
+	testFileExports(t, "./testfiles/edge-cases.tsx", expectedExports)
 }
 
 func testEdgeList(t *testing.T, edgeList, expected map[string][]string) {
@@ -363,6 +353,15 @@ func testEdgeList(t *testing.T, edgeList, expected map[string][]string) {
 			}
 		}
 	}
+}
+
+func testFileExports(t *testing.T, filepath string, expectedExports []string) {
+	tokenizer, err := NewTokenizerFromFile(filepath)
+	if err != nil {
+		t.Fatalf("Expected successful file read. Got error: %s", err)
+	}
+	tokenizedFile := tokenizer.Tokenize()
+	testArray(t, tokenizedFile.Exports, expectedExports)
 }
 
 func testArray(t *testing.T, arr, expected []string) {
