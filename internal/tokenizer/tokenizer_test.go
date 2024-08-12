@@ -57,6 +57,15 @@ func TestSimpleImport(t *testing.T) {
 	}
 }
 
+func TestSkipString(t *testing.T) {
+	tokenizer := New(`"import foo from './foo';"`, ".")
+	tokenizedFile := tokenizer.Tokenize()
+	output := getImportStrings(tokenizedFile)
+	if len(output) != 0 {
+		t.Fatalf("Expected not to read any imports but got %d", len(output))
+	}
+}
+
 func TestDynamicImport(t *testing.T) {
 	tokenizer := New(`const foo = await import("./foo"); "bar";`, ".")
 	tokenizedFile := tokenizer.Tokenize()
@@ -324,6 +333,7 @@ func TestTypes(t *testing.T) {
 
 func TestEdgeCases(t *testing.T) {
 	expectedExports := []string{
+		"imports",
 		"exports",
 	}
 	testFileExports(t, "./testfiles/edge-cases.tsx", expectedExports)
