@@ -66,6 +66,8 @@ func (t *Tokenizer) Tokenize() FileToken {
 		} else if t.char == '/' {
 			// comments could contain keywords in them but should not be parsed as imports / exports
 			t.skipComment(true)
+		} else if isQuote(t.char) {
+			t.skipString(t.char)
 		} else {
 			// avoids reading char if a previous read got us to EOF
 			t.readChar()
@@ -366,7 +368,33 @@ func (t *Tokenizer) readPathString() string {
 	if isRelativePath(pathString) {
 		pathString = filepath.Join(t.callDir, pathString)
 	}
+	t.readChar()
 	return pathString
+}
+
+// need to skip strings to avoid reading code inside of strings as real strings
+// this needs to be a recursive process because a string can be nested inside
+// of a string. We also need to handle escaped strings
+func (t *Tokenizer) skipString(startChar rune) {
+	t.readChar()
+	isEscaped := false
+	for t.currentIndex < t.end() {
+		if !isEscaped && t.char == '\\' {
+			isEscaped = true
+			t.readChar()
+			continue
+		}
+		if !isEscaped && isQuote(t.char) {
+			if t.char == startChar {
+				t.readChar()
+				return
+			}
+			t.skipString(t.char)
+		}
+		isEscaped = false
+		t.readChar()
+	}
+	panic(fmt.Sprintf("Error: tokenizer came accross a non-terminating string in %q. This is likely a syntax error.\n", t.initPath))
 }
 
 func (t *Tokenizer) readChar() {
