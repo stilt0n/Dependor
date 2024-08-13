@@ -15,10 +15,11 @@ import (
 )
 
 type SingleThreadedGraphParser struct {
-	tokens   map[string]*tokenizer.FileToken
-	config   *config.Config
-	rootPath string
-	edgeList DependencyGraph
+	tokens     map[string]*tokenizer.FileToken
+	config     *config.Config
+	rootPath   string
+	edgeList   DependencyGraph
+	middleware []func(filepath string)
 }
 
 // Supports single optional rootPath argument. Uses "." by default.
@@ -63,6 +64,11 @@ func (graph *SingleThreadedGraphParser) GetCustomConfig() ([]byte, error) {
 	return graph.config.GetCustomConfig()
 }
 
+// adds a callback to be run before parsing each file
+func (graph *SingleThreadedGraphParser) AddMiddleware(callback func(filepath string)) {
+	graph.middleware = append(graph.middleware, callback)
+}
+
 // Walks file tree from root path and populates tokenizedFiles
 func (graph *SingleThreadedGraphParser) walk() error {
 	searchableExtensions := regexp.MustCompile(`(\.js|\.jsx|\.ts|\.tsx)$`)
@@ -78,6 +84,9 @@ func (graph *SingleThreadedGraphParser) walk() error {
 		}
 
 		if searchableExtensions.MatchString(info.Name()) {
+			for _, callback := range graph.middleware {
+				callback(path)
+			}
 			graph.readImports(path)
 		}
 		return nil

@@ -58,3 +58,45 @@ func TestParse(t *testing.T) {
 		}
 	}
 }
+
+func TestMiddleware(t *testing.T) {
+	var visitedFiles []string
+	middlewareTest := func(filepath string) {
+		visitedFiles = append(visitedFiles, filepath)
+	}
+	expectedFiles := []string{
+		"test_tree/a.js",
+		"test_tree/b.ts",
+		"test_tree/util/c.js",
+		"test_tree/src/components/d.jsx",
+		"test_tree/src/components/e.tsx",
+		"test_tree/src/components/i/i.jsx",
+		"test_tree/src/components/i/not_imported.ts",
+		"test_tree/src/components/i/annoying.jsx",
+		"test_tree/src/components/i/folder/importFromParentFolder.ts",
+		"test_tree/src/components/sibling/importFromSibling.js",
+		"test_tree/src/components/i/index.js",
+		"test_tree/src/components/f.tsx",
+		"test_tree/src/hooks/g.ts",
+		"test_tree/src/hooks/h.ts",
+		"test_tree/re-exports/index.js",
+		"test_tree/re-exports/rexa.js",
+		"test_tree/re-exports/rexb.js",
+		"test_tree/re-exports/rexc.js",
+		"test_tree/edge-cases.js",
+		"test_tree/type-edge-cases.ts",
+	}
+	parser := NewSync()
+	parser.AddMiddleware(middlewareTest)
+	parser.ParseGraph()
+
+	if len(expectedFiles) != len(visitedFiles) {
+		t.Fatalf("Got the wrong number of visited files. Expected %d got %d", len(expectedFiles), len(visitedFiles))
+	}
+
+	for _, file := range expectedFiles {
+		if !slices.Contains(visitedFiles, file) {
+			t.Errorf("Did not expect %q to be in visited files list.", file)
+		}
+	}
+}
