@@ -17,7 +17,6 @@ import (
 type SingleThreadedGraphParser struct {
 	tokens     map[string]*tokenizer.FileToken
 	config     *config.Config
-	rootPath   string
 	edgeList   DependencyGraph
 	middleware []func(filepath string)
 }
@@ -40,9 +39,8 @@ func NewSync(rootPath ...string) *SingleThreadedGraphParser {
 	}
 
 	return &SingleThreadedGraphParser{
-		config:   cfg,
-		rootPath: rp,
-		tokens:   make(map[string]*tokenizer.FileToken, 0),
+		config: cfg,
+		tokens: make(map[string]*tokenizer.FileToken, 0),
 	}
 }
 
@@ -72,7 +70,9 @@ func (graph *SingleThreadedGraphParser) AddMiddleware(callback func(filepath str
 // Walks file tree from root path and populates tokenizedFiles
 func (graph *SingleThreadedGraphParser) walk() error {
 	searchableExtensions := regexp.MustCompile(`(\.js|\.jsx|\.ts|\.tsx)$`)
-	err := filepath.WalkDir(graph.rootPath, func(path string, info fs.DirEntry, err error) error {
+	// walk always starts in the current directory because the graph constructor
+	// will have already changed directories to the correct one
+	err := filepath.WalkDir(".", func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			fmt.Printf("There was an error accessing path %q: %v\n", path, err)
 			return err
