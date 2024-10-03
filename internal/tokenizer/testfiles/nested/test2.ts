@@ -4,6 +4,8 @@ import defaultExample, { example } from "example";
 import type { FooType } from "@Foo/foo";
 // @ts-ignore
 import { Foo } from "@Foo/foo";
+// @ts-ignore
+import { Bar, type BarType } from "@Bar/bar";
 
 const foo = "foo";
 const bar = "bar";
