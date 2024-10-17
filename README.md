@@ -59,7 +59,7 @@ for file, imports := range graph {
 }
 ```
 
-### Known Issues
+### Limitations and Known Issues
 
 > 💡 Tip: dependor has an [ESLint plugin](https://github.com/stilt0n/eslint-plugin-dependor) for the issues below
 
