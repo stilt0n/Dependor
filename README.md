@@ -89,7 +89,7 @@ If you need to include the words "import" or "export" inside of JSX tags and wan
 Can be refactored to
 
 ```jsx
-<p>{"using the words import of export in JSX can cause issues for dependor"}</p>
+<p>{"using the words import or export in JSX can cause issues for dependor"}</p>
 ```
 
 Dependor ignores keywords inside of strings, so this should prevent panics or incorrect output when parsing.
