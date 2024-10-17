@@ -59,7 +59,9 @@ for file, imports := range graph {
 }
 ```
 
-### Caveats
+### Known Issues
+
+> 💡 Tip: dependor has an [ESLint plugin](https://github.com/stilt0n/eslint-plugin-dependor) for the issues below
 
 Dependor does not handle _all_ possible export syntax yet. Dependor tries to handle as many cases from the mdn docs as possible (see mdn docs for [imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import) and [exports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export)) but for exports there are some cases that are not yet handled:
 
@@ -74,9 +76,23 @@ export const a = "a",
 export { foo as "invalid identifier alias" } from "./foo";
 ```
 
-Cases 1 and 3 will likely be handled sometime in the near future (with lower priority on 3. which seems obscure enough that even my ESLint config thinks it's wrong). Case 2 is unlikely to be handled by Dependor any time soon, because I have been unable to think of a way to do so without implementing JavaScript expression parsing, which would pretty much require me to write a full JavaScript parser.
+I plan to add support for case 3 in the future. Case 1 and 2 will likely never be supported unless someone can propose a way to parse these that does not require full expression parsing. 1. and 2. can be refactored quite easily, and dependor has an [ESLint plugin](https://github.com/stilt0n/eslint-plugin-dependor) that will help you track them down.
 
 There is also a [known bug](https://github.com/stilt0n/dependor/issues/19) where import statements inside JSX tags are not ignored. Unless you have a completely valid import statement inside of a JSX tag this will cause the tokenizer to panic, so if you're not getting errors this bug probably doesn't effect you.
+
+If you need to include the words "import" or "export" inside of JSX tags and want to use dependor, you can work around this issue by using these words as strings. e.g.
+
+```jsx
+<p>using the words import or export in JSX can cause issues for dependor</p>
+```
+
+Can be refactored to
+
+```jsx
+<p>{"using the words import of export in JSX can cause issues for dependor"}</p>
+```
+
+Dependor ignores keywords inside of strings, so this should prevent panics or incorrect output when parsing.
 
 ## Parser Methods
 
